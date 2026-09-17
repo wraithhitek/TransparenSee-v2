@@ -344,7 +344,7 @@ function mapCategory(w: ApiWork): WorkCategory {
     { key: "delay_risk",     cat: "timeline"     as WorkCategory },
     { key: "vendor_risk",    cat: "geographic"   as WorkCategory },
   ];
-  const vals = risks.map(r => ({ cat: r.cat, val: (w as Record<string,number>)[r.key] ?? 0 }));
+  const vals = risks.map(r => ({ cat: r.cat, val: ((w as unknown) as Record<string, number>)[r.key] ?? 0 }));
   const max = vals.reduce((a, b) => a.val >= b.val ? a : b);
   return max.val > 20 ? max.cat : "multi-factor";
 }

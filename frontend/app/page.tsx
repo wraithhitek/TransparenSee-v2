@@ -30,7 +30,7 @@ export default function OverviewPage() {
   const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchKpis(), fetchWorks(1000)])
+    Promise.all([fetchKpis(), fetchWorks({ limit: 1000 })])
       .then(([k, w]) => {
         setKpis(k);
         setWorks(w.map(toWorkShape));

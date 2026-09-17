@@ -46,20 +46,41 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy source code (excluding dev files via .dockerignore)
 COPY . .
 
+# Create startup script directly in Dockerfile
+RUN echo '#!/bin/bash\n\
+set -e\n\
+export MPLADS_AUTH_DISABLED=1\n\
+export MPLADS_LOG_LEVEL=INFO\n\
+DB_PATH="data/processed/mplads.db"\n\
+if [ -f "$DB_PATH" ]; then\n\
+  echo "==> Checking if database has tables..."\n\
+  if ! python -c "import sqlite3; conn=sqlite3.connect(\"$DB_PATH\"); cursor=conn.cursor(); cursor.execute(\"SELECT name FROM sqlite_master WHERE type=\\\"table\\\" AND name=\\\"dim_mp\\\"\"); result=cursor.fetchone(); conn.close(); exit(0 if result else 1)"; then\n\
+    echo "==> Database exists but has no tables. Removing and rebuilding..."\n\
+    rm -f "$DB_PATH"\n\
+  else\n\
+    echo "==> Database has tables. Skipping pipeline."\n\
+  fi\n\
+fi\n\
+if [ ! -f "$DB_PATH" ]; then\n\
+  echo "==> Database not found. Running pipeline to build it..."\n\
+  python -m backend.data_pipeline.main --offline --skip-eda --skip-dashboard\n\
+  echo "==> Pipeline complete. Starting API server..."\n\
+else\n\
+  echo "==> Database found. Starting API server..."\n\
+fi\n\
+exec uvicorn backend.api.main:app --host 0.0.0.0 --port ${PORT:-8000} --access-log --no-use-colors' > /app/startup.sh && chmod +x /app/startup.sh
+
 # Create required directories
 RUN mkdir -p data/processed data/raw data/cleaned data/analytical \
              outputs/models outputs/artifacts outputs/reports outputs/logs
 
-# The pre-built SQLite DB and ML model are baked into the image
-# so the container starts instantly without re-running the pipeline.
-# They are generated locally once and committed (see DEPLOYMENT.md).
-
-# Expose FastAPI port
-EXPOSE 8000
+# Expose port (Railway overrides this with $PORT env var)
+EXPOSE 8080
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+HEALTHCHECK --interval=30s --timeout=15s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:' + str(__import__('os').environ.get('PORT', 8000)) + '/health')"
 
-# Run uvicorn pointing at the FastAPI app
-CMD ["uvicorn", "backend.api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+# Use startup script created in Dockerfile
+CMD ["bash", "/app/startup.sh"]
+
