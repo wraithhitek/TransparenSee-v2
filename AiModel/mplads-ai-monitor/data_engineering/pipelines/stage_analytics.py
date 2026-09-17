@@ -31,7 +31,7 @@ log = get_logger("pipeline.stage2")
 
 
 def run(ctx: RunContext, works: pd.DataFrame, expenditures: pd.DataFrame,
-        mp_dim: pd.DataFrame, geo: pd.DataFrame) -> dict:
+        mp_dim: pd.DataFrame, geo: pd.DataFrame, skip_duplicates: bool = False) -> dict:
     analytical = ROOT / "data" / "analytical"
 
     # ---------------------------------------------------------- 1. features
@@ -40,7 +40,11 @@ def run(ctx: RunContext, works: pd.DataFrame, expenditures: pd.DataFrame,
     ctx.event("features", "built", works=len(work_features), vendors=len(vendor_features))
 
     # -------------------------------------------------- 2. NLP duplicates
-    pairs = find_duplicate_works(works)
+    if skip_duplicates:
+        log.info("Skipping NLP near-duplicate search (--skip-duplicates enabled)")
+        pairs = pd.DataFrame()
+    else:
+        pairs = find_duplicate_works(works)
     dup_scores = duplicate_work_scores(pairs, works)
     ctx.event("nlp", "duplicate_pairs", pairs=len(pairs))
 

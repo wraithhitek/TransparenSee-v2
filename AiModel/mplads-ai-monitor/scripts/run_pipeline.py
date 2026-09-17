@@ -32,6 +32,7 @@ def main() -> int:
                     help="do not probe the official portal; use the latest official snapshot")
     ap.add_argument("--skip-eda", action="store_true", help="skip the EDA report")
     ap.add_argument("--skip-dashboard", action="store_true", help="skip building the dashboard payload")
+    ap.add_argument("--skip-duplicates", action="store_true", help="skip the NLP duplicate search")
     args = ap.parse_args()
 
     ctx = RunContext()
@@ -46,7 +47,8 @@ def main() -> int:
                 stage1["geo"], stage1["quality"], ctx.run_id)
 
     stage2 = stage_analytics.run(ctx, stage1["works"], stage1["expenditures"],
-                                 stage1["mp_dim"], stage1["geo"])
+                                 stage1["mp_dim"], stage1["geo"],
+                                 skip_duplicates=args.skip_duplicates)
 
     if not args.skip_dashboard:
         from data_analysis.reports.dashboard_payload import build_payload
