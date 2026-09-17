@@ -1,0 +1,162 @@
+{
+  "national_summary": {
+    "total_mps": 764,
+    "total_allocated": "\u20b911621.06 Cr",
+    "total_expenditure": "\u20b93918.73 Cr",
+    "utilisation_pct": "33.72%",
+    "total_works_recommended": "83,621",
+    "total_works_completed": "43,173",
+    "completion_rate": "51.63%",
+    "pending_works": "40,448",
+    "total_transactions": "106,263",
+    "avg_mp_allocation": "\u20b915.21 Cr",
+    "completed_works_value": "\u20b92364.02 Cr",
+    "in_progress_payments": "\u20b91554.71 Cr",
+    "payment_gap_pct": "39.67%"
+  },
+  "recommended_works": {
+    "rows": 83621,
+    "columns": 11,
+    "unique_mps": 725,
+    "unique_states": 36,
+    "unique_districts": 757,
+    "amount_distribution": {
+      "count": 83621,
+      "min": "\u20b91",
+      "p25": "\u20b92.00 L",
+      "median": "\u20b94.00 L",
+      "mean": "\u20b96.44 L",
+      "p75": "\u20b97.11 L",
+      "p95": "\u20b920.00 L",
+      "p99": "\u20b945.00 L",
+      "max": "\u20b910.00 Cr",
+      "total": "\u20b95382.28 Cr",
+      "std": "\u20b912.40 L"
+    },
+    "round_bias": {
+      "multiple_of_1L": "44,228  (52.9%)",
+      "multiple_of_5L": "21,829  (26.1%)",
+      "multiple_of_10L": "7,545  (9.0%)",
+      "multiple_of_1Cr": "73  (0.1%)"
+    },
+    "top_categories": [
+      [
+        "Normal/Others",
+        81384,
+        "97.3%"
+      ],
+      [
+        "Repair and Renovation",
+        1333,
+        "1.6%"
+      ],
+      [
+        "Trust and Society",
+        881,
+        "1.1%"
+      ],
+      [
+        "Bar and Associations",
+        18,
+        "0.0%"
+      ]
+    ],
+    "exact_duplicate_descriptions": 7859,
+    "works_with_images": 206
+  },
+  "completed_works": {
+    "rows": 43173,
+    "columns": 13,
+    "unique_mps": 655,
+    "works_with_images": 30426,
+    "amount_distribution": {
+      "count": 43173,
+      "min": "\u20b98,448",
+      "p25": "\u20b91.77 L",
+      "median": "\u20b93.00 L",
+      "mean": "\u20b95.48 L",
+      "p75": "\u20b96.00 L",
+      "p95": "\u20b915.00 L",
+      "p99": "\u20b931.29 L",
+      "max": "\u20b94.65 Cr",
+      "total": "\u20b92364.02 Cr",
+      "std": "\u20b910.24 L"
+    },
+    "round_bias": {
+      "multiple_of_1L": "6,662  (15.4%)",
+      "multiple_of_5L": "2,497  (5.8%)",
+      "multiple_of_10L": "705  (1.6%)",
+      "multiple_of_1Cr": "5  (0.0%)"
+    },
+    "top_categories": [
+      [
+        "Normal/Others",
+        42536,
+        "98.5%"
+      ],
+      [
+        "Repair and Renovation",
+        461,
+        "1.1%"
+      ],
+      [
+        "Trust and Society",
+        170,
+        "0.4%"
+      ],
+      [
+        "Bar and Associations",
+        1,
+        "0.0%"
+      ]
+    ],
+    "median_age_days": 246.0,
+    "exact_duplicate_descriptions": 6241
+  },
+  "expenditures": {
+    "rows": 106263,
+    "columns": 11,
+    "unique_vendors": 27496,
+    "unique_mps": 698,
+    "unique_districts": 761,
+    "amount_distribution": {
+      "count": 106263,
+      "min": "\u20b90",
+      "p25": "\u20b970,000",
+      "median": "\u20b92.00 L",
+      "mean": "\u20b93.69 L",
+      "p75": "\u20b94.58 L",
+      "p95": "\u20b912.02 L",
+      "p99": "\u20b925.77 L",
+      "max": "\u20b93.26 Cr",
+      "total": "\u20b93918.73 Cr",
+      "std": "\u20b96.53 L"
+    },
+    "round_bias": {
+      "multiple_of_1L": "10,843  (10.2%)",
+      "multiple_of_5L": "2,849  (2.7%)",
+      "multiple_of_10L": "562  (0.5%)",
+      "multiple_of_1Cr": "2  (0.0%)"
+    },
+    "repeated_payment_keys": 6934,
+    "repeated_payment_rows": 39833,
+    "max_single_repetition": 112,
+    "payment_status": {
+      "Payment Success": 102900,
+      "Payment In-Progress": 3363
+    }
+  },
+  "mp_summary": {
+    "total_mps": 764,
+    "lok_sabha": 543,
+    "rajya_sabha": 221,
+    "total_allocated": 116210588210.35,
+    "total_expended": 39187346910.14,
+    "mean_utilisation_pct": 31.551151832460736,
+    "median_utilisation_pct": 29.935000000000002,
+    "mps_below_25pct_util": 325,
+    "mps_above_90pct_util": 3,
+    "total_unspent": 77023241300.21,
+    "total_pending_payments": 3363.0
+  }
+}

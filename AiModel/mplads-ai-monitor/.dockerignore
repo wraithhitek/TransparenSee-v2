@@ -1,0 +1,57 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+
+# Dev/test files
+tests/
+pytest.ini
+*.ipynb
+
+# Large raw data (pipeline outputs are baked in; raw inputs not needed at runtime)
+data/raw/
+data/cleaned/
+data/analytical/
+
+# Logs and temp outputs
+outputs/logs/
+outputs/reports/
+
+# Local env overrides
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (frontend lives elsewhere)
+frontend/
+node_modules/
+
+# Docs
+docs/
+README.md

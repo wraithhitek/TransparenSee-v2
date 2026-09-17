@@ -1,0 +1,58 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TransparenSee — local full-stack dev environment
+# Usage:
+#   docker compose up --build          # first time
+#   docker compose up                  # subsequent runs
+#   docker compose down                # stop everything
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── FastAPI backend ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./AiModel/mplads-ai-monitor
+      dockerfile: Dockerfile
+    container_name: transparensee-api
+    ports:
+      - "8000:8000"
+    environment:
+      # API keys (override in .env or Railway env vars for production)
+      - MPLADS_VIEWER_KEY=${MPLADS_VIEWER_KEY:-dev-viewer-key}
+      - MPLADS_ANALYST_KEY=${MPLADS_ANALYST_KEY:-dev-analyst-key}
+      - MPLADS_ADMIN_KEY=${MPLADS_ADMIN_KEY:-dev-admin-key}
+      # SQLite path inside container (relative to WORKDIR /app)
+      - MPLADS_DB_URL=sqlite:///data/processed/mplads.db
+    volumes:
+      # Mount outputs so DB and model survive container restarts
+      - api_data:/app/data/processed
+      - api_models:/app/outputs/models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # ── Next.js frontend ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: transparensee-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Points the browser at the API — use the public Railway URL in prod
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  api_data:
+  api_models:

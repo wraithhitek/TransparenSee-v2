@@ -1,0 +1,239 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
+import {
+  AlertTriangle,
+  BellRing,
+  Building2,
+  ChartNoAxesCombined,
+  ClipboardCheck,
+  FileBarChart,
+  FileClock,
+  Gauge,
+  LayoutDashboard,
+  MapPinned,
+  Network,
+  Radar,
+  Settings,
+  ShieldAlert,
+  TrendingUp,
+  Users,
+  WalletCards,
+  ChevronLeft,
+  ChevronRight,
+  type LucideIcon,
+} from "lucide-react";
+
+type NavItem = { label: string; href: string; icon: LucideIcon };
+
+const monitoringItems: NavItem[] = [
+  { label: "Works",               href: "/works",                 icon: ClipboardCheck },
+  { label: "Investigation Queue", href: "/queue",                 icon: Radar },
+  { label: "Map View",            href: "/map",                   icon: MapPinned },
+  { label: "Fund Utilization",    href: "/fund-utilization",      icon: WalletCards },
+  { label: "AI Risk Insights",    href: "/risk-insights",         icon: ChartNoAxesCombined },
+  { label: "Anomaly Detection",   href: "/anomaly-detection",     icon: AlertTriangle },
+  { label: "Fraud Detection",     href: "/fraud-detection",       icon: ShieldAlert },
+  { label: "Inefficiency Detection", href: "/inefficiency-detection", icon: Gauge },
+  { label: "Geo Verification",    href: "/geo-verification",      icon: Network },
+];
+
+const analyticsItems: NavItem[] = [
+  { label: "District Intelligence", href: "/district-intelligence", icon: Building2 },
+  { label: "Vendor Intelligence",   href: "/vendor-intelligence",   icon: Network },
+  { label: "Trend & Forecasting",   href: "/trend-forecasting",     icon: TrendingUp },
+  { label: "Outcome Analytics",     href: "/outcome-analytics",     icon: ChartNoAxesCombined },
+];
+
+const managementItems: NavItem[] = [
+  { label: "Alerts & Actions", href: "/alerts-actions", icon: BellRing },
+  { label: "Reports",          href: "/reports",         icon: FileBarChart },
+  { label: "Audit Trail",      href: "/audit-trail",     icon: FileClock },
+  { label: "Users & Roles",    href: "/users-roles",     icon: Users },
+  { label: "Settings",         href: "/settings",        icon: Settings },
+];
+
+function NavigationSection({
+  title, items, pathname, collapsed,
+}: {
+  title: string; items: NavItem[]; pathname: string; collapsed: boolean;
+}) {
+  return (
+    <section className="mb-4">
+      {!collapsed && (
+        <div className="mb-2 flex items-center gap-2 px-3">
+          <span className="h-px w-3 bg-[#294563]" />
+          <span className="text-[9px] font-semibold uppercase tracking-[1.1px] text-[#6f89a4]">
+            {title}
+          </span>
+        </div>
+      )}
+      {collapsed && <div className="mb-1 mx-2 h-px bg-[#1e3a52]" />}
+
+      <div className="space-y-0.5">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={collapsed ? item.label : undefined}
+              className={[
+                "group relative flex h-[38px] items-center rounded-[8px] transition-all duration-150",
+                collapsed ? "mx-1.5 justify-center px-0" : "mx-2 px-3",
+                active
+                  ? "bg-[#2563eb] text-white shadow-[0_4px_14px_rgba(37,99,235,0.18)]"
+                  : "text-[#9db0c4] hover:bg-[#142f4c] hover:text-[#e5edf5]",
+              ].join(" ")}
+            >
+              {active && !collapsed && (
+                <span className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-white" />
+              )}
+              <span className={[
+                "flex shrink-0 items-center justify-center rounded-[6px]",
+                collapsed ? "size-8" : "size-7",
+                active ? "bg-white/10" : "group-hover:bg-[#1a3857]",
+              ].join(" ")}>
+                <Icon size={15} strokeWidth={active ? 2 : 1.7}
+                  className="transition-transform duration-150 group-hover:scale-[1.04]" />
+              </span>
+              {!collapsed && (
+                <span className={["ml-2.5 truncate text-[11px]", active ? "font-semibold" : "font-medium"].join(" ")}>
+                  {item.label}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// Inline TransparenSee logo SVG (shield with eye/transparency motif)
+function TransparenSeeLogo({ size = 28 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Shield background */}
+      <path d="M20 3L5 9V21C5 29.5 12 36.5 20 39C28 36.5 35 29.5 35 21V9L20 3Z"
+        fill="url(#shieldGrad)" stroke="white" strokeWidth="0.5" strokeOpacity="0.3" />
+      {/* Eye */}
+      <ellipse cx="20" cy="21" rx="8" ry="5.5" fill="white" fillOpacity="0.18" />
+      <path d="M12 21C14 16.5 17 14 20 14C23 14 26 16.5 28 21C26 25.5 23 28 20 28C17 28 14 25.5 12 21Z"
+        stroke="white" strokeWidth="1.5" fill="none" />
+      {/* Pupil */}
+      <circle cx="20" cy="21" r="3.5" fill="white" fillOpacity="0.9" />
+      <circle cx="20" cy="21" r="2" fill="url(#shieldGrad)" />
+      {/* Highlight */}
+      <circle cx="21.5" cy="19.5" r="0.8" fill="white" fillOpacity="0.8" />
+      <defs>
+        <linearGradient id="shieldGrad" x1="5" y1="3" x2="35" y2="39" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#3b82f6" />
+          <stop offset="100%" stopColor="#1d4ed8" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Persist collapse state
+  useEffect(() => {
+    const stored = localStorage.getItem("sidebar-collapsed");
+    if (stored === "true") setCollapsed(true);
+  }, []);
+
+  const toggle = () => {
+    setCollapsed((c) => {
+      localStorage.setItem("sidebar-collapsed", String(!c));
+      return !c;
+    });
+  };
+
+  const w = collapsed ? "w-[64px]" : "w-[260px]";
+
+  return (
+    <>
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 ${w} bg-[#0b2743] text-white transition-all duration-200 ease-out`}>
+        <div className="flex h-full flex-col overflow-hidden">
+
+          {/* Logo area */}
+          <div className={`shrink-0 ${collapsed ? "px-2 pb-3 pt-4" : "px-5 pb-4 pt-5"}`}>
+            <Link href="/" className="group flex items-center gap-0">
+              <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#2f72ed] to-[#174fc7] shadow-[0_5px_16px_rgba(37,99,235,0.24)] transition-all duration-200 ${collapsed ? "size-[42px] mx-auto" : "size-[38px]"}`}>
+                <div className="absolute inset-0 bg-white/[0.04]" />
+                <TransparenSeeLogo size={collapsed ? 26 : 24} />
+              </div>
+
+              {!collapsed && (
+                <div className="ml-3 min-w-0">
+                  <div className="truncate text-[14px] font-bold tracking-[-0.2px] text-white">
+                    TransparenSee
+                  </div>
+                  <div className="truncate text-[8px] font-medium tracking-[0.05px] text-[#7892ad]">
+                    MPLADS AI Monitor
+                  </div>
+                </div>
+              )}
+            </Link>
+          </div>
+
+          {/* Overview link */}
+          <div className={`shrink-0 ${collapsed ? "px-1.5" : "px-2"}`}>
+            <Link
+              href="/"
+              title={collapsed ? "Overview" : undefined}
+              className={[
+                "group relative flex h-[40px] items-center rounded-[8px] transition-all duration-150",
+                collapsed ? "justify-center" : "px-3.5",
+                "bg-[#2563eb] text-white shadow-[0_5px_18px_rgba(37,99,235,0.18)] hover:bg-[#2d6bea]",
+              ].join(" ")}
+            >
+              <span className="flex size-7 items-center justify-center rounded-[6px] bg-white/10">
+                <LayoutDashboard size={15} strokeWidth={2} />
+              </span>
+              {!collapsed && <span className="ml-2.5 text-[11px] font-semibold">Overview</span>}
+              {!collapsed && <span className="ml-auto block size-1.5 rounded-full bg-white/80" />}
+            </Link>
+          </div>
+
+          {/* Nav sections */}
+          <div className="sidebar-scroll mt-4 min-h-0 flex-1 overflow-y-auto px-0">
+            <NavigationSection title="Monitoring"  items={monitoringItems}  pathname={pathname} collapsed={collapsed} />
+            <NavigationSection title="Analytics"   items={analyticsItems}   pathname={pathname} collapsed={collapsed} />
+            <NavigationSection title="Management"  items={managementItems}  pathname={pathname} collapsed={collapsed} />
+          </div>
+
+          {/* Footer */}
+          {!collapsed && (
+            <div className="shrink-0 border-t border-[#193955] px-5 py-3">
+              <p className="text-[8px] font-medium text-[#7189a2]">© 2026 TransparenSee</p>
+              <p className="mt-0.5 text-[8px] text-[#526f8b]">Ministry of Statistics & Programme Implementation</p>
+            </div>
+          )}
+        </div>
+
+        <style jsx>{`
+          .sidebar-scroll { scrollbar-width: none; -ms-overflow-style: none; scroll-behavior: smooth; overscroll-behavior: contain; }
+          .sidebar-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+        `}</style>
+      </aside>
+
+      {/* Collapse toggle button — floats at edge of sidebar */}
+      <button
+        onClick={toggle}
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        className={`fixed top-[76px] z-[60] flex h-6 w-6 items-center justify-center rounded-full border border-[#2a4a66] bg-[#0b2743] text-[#7892ad] shadow-md transition-all duration-200 hover:bg-[#1a3857] hover:text-white ${collapsed ? "left-[52px]" : "left-[248px]"}`}
+      >
+        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+      </button>
+    </>
+  );
+}
