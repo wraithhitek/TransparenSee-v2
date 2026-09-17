@@ -42,6 +42,7 @@ WORKDIR /app
 # Copy venv from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+ENV PYTHONPATH="/app:$PYTHONPATH"
 
 # Copy source code (excluding dev files via .dockerignore)
 COPY . .
@@ -63,7 +64,7 @@ if [ -f "$DB_PATH" ]; then\n\
 fi\n\
 if [ ! -f "$DB_PATH" ]; then\n\
   echo "==> Database not found. Running pipeline to build it..."\n\
-  python -m backend.data_pipeline.main --offline --skip-eda --skip-dashboard\n\
+  python scripts/run_pipeline.py --offline --skip-eda --skip-dashboard\n\
   echo "==> Pipeline complete. Starting API server..."\n\
 else\n\
   echo "==> Database found. Starting API server..."\n\
