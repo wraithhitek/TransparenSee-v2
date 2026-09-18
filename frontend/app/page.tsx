@@ -12,7 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { fetchKpis, fetchWorks, fetchStates, toWorkShape, type ApiKpis, type WorkShape, type ApiState } from "@/lib/api";
+import { fetchKpis, fetchWorks, fetchStates, toWorkShape, BASE, type ApiKpis, type WorkShape, type ApiState } from "@/lib/api";
 import { getRiskBand } from "@/lib/riskUtils";
 
 const formatCr = (value: number) =>
@@ -108,7 +108,7 @@ export default function OverviewPage() {
         {/* ================= API STATUS BANNER ================= */}
         {apiError && (
           <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-            ⚠ API unavailable — showing static demo data. Start the backend: <code>python -m uvicorn backend.api.main:app --port 8000</code>
+            ⚠ API Error: {apiError} (Backend: <code>{BASE}</code>)
           </div>
         )}
         {!apiError && !loading && kpis && (
