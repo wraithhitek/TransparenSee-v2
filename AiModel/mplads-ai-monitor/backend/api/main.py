@@ -39,8 +39,14 @@ app = FastAPI(
     description="AI-assisted MPLADS anomaly, risk and inefficiency detection — analytics API.",
     version=cfg["project.risk_engine_version"],
 )
-app.add_middleware(CORSMiddleware, allow_origins=os.environ.get("MPLADS_CORS", "*").split(","),
-                   allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_origin_regex=r".*",
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------------------------------------------- auth / limits
 ROLE_KEYS = {
