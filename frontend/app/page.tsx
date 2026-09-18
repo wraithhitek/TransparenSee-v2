@@ -101,9 +101,8 @@ export default function OverviewPage() {
   const donutLow      = Math.max(0, donutTotal - donutHigh - donutMedium);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#f7f8fa] text-slate-800">
+    <div className="w-full text-slate-800">
       <DashboardAnimations />
-      <div className="mx-auto w-full max-w-[1700px] px-3.5 pb-6 pt-3 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
 
         {/* ================= API STATUS BANNER ================= */}
         {apiError && (
@@ -401,9 +400,8 @@ export default function OverviewPage() {
           </section>
         </footer>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
 /* ================= SIMPLE DASHBOARD ANIMATIONS ================= */
 
