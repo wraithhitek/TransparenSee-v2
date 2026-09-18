@@ -3,7 +3,7 @@
  * Base URL defaults to localhost:8000 for local dev.
  */
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BASE = (process.env.NEXT_PUBLIC_API_URL || "https://transparensee-production.up.railway.app").replace(/\/$/, "");
 const KEY  = process.env.NEXT_PUBLIC_API_KEY  ?? "dev-viewer-key";
 
 const headers: Record<string, string> = {
