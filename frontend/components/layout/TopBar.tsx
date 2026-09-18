@@ -259,6 +259,22 @@ export default function TopBar() {
   const profileRef =
     useRef<HTMLDivElement>(null);
 
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const checkCollapsed = () => {
+      const v = typeof window !== "undefined" ? localStorage.getItem("sidebar-collapsed-v2") : null;
+      setSidebarCollapsed(v === "true");
+    };
+    checkCollapsed();
+    window.addEventListener("storage", checkCollapsed);
+    const interval = setInterval(checkCollapsed, 150);
+    return () => {
+      window.removeEventListener("storage", checkCollapsed);
+      clearInterval(interval);
+    };
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(
       event: MouseEvent,
@@ -466,7 +482,10 @@ export default function TopBar() {
   );
 
   return (
-    <header className="fixed left-[260px] right-0 top-0 z-40 h-[112px] border-b border-[#EAECF0] bg-white">
+    <header
+      className="fixed right-0 top-0 z-40 h-[112px] border-b border-[#EAECF0] bg-white transition-all duration-200 ease-out"
+      style={{ left: sidebarCollapsed ? "64px" : "260px" }}
+    >
       <div className="relative h-full w-full">
 
         <div className="absolute right-[22px] top-[11px] flex h-[40px] items-center gap-[7px]">

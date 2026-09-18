@@ -101,9 +101,9 @@ export default function OverviewPage() {
   const donutLow      = Math.max(0, donutTotal - donutHigh - donutMedium);
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-[#f7f8fa] text-slate-800">
+    <div className="min-h-screen w-full overflow-x-hidden bg-[#f7f8fa] text-slate-800">
       <DashboardAnimations />
-      <div className="mx-auto w-full max-w-[1700px] px-4 pb-5 pt-5 sm:px-5 sm:pb-7 sm:pt-11 lg:px-6 xl:px-7">
+      <div className="mx-auto w-full max-w-[1700px] px-3.5 pb-6 pt-3 sm:px-5 sm:pb-8 sm:pt-4 lg:px-6">
 
         {/* ================= API STATUS BANNER ================= */}
         {apiError && (
@@ -124,12 +124,12 @@ export default function OverviewPage() {
 
         {/* ================= HEADER ================= */}
 
-        <header className="mb-4">
-          <h1 className="text-[22px] font-bold leading-tight tracking-tight text-slate-900">
+        <header className="mb-3.5">
+          <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
             National Overview
           </h1>
 
-          <p className="mt-1 text-sm text-slate-400">
+          <p className="mt-0.5 text-xs sm:text-sm text-slate-400">
             AI-powered monitoring of funds, projects, implementation risk and
             compliance
           </p>
@@ -137,7 +137,7 @@ export default function OverviewPage() {
 
         {/* ================= KPI CARDS ================= */}
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <section className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:grid-cols-5">
           <KPI
             title="Total Projects"
             value={(kpis?.works_recommended ?? data.total).toLocaleString("en-IN")}
@@ -173,32 +173,32 @@ export default function OverviewPage() {
 
         {/* ================= HIGH RISK ALERT ================= */}
 
-        <section className="mt-3 flex flex-col gap-3 rounded-lg border border-red-200/70 bg-red-50/60 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <section className="mt-3 flex flex-col gap-2.5 rounded-lg border border-red-200/70 bg-red-50/60 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-100">
+            <span className="grid h-7 w-7 sm:h-8 sm:w-8 shrink-0 place-items-center rounded-full bg-red-100">
               <AlertTriangle className="h-4 w-4 text-red-500" />
             </span>
 
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-red-600">
+              <p className="text-xs sm:text-sm font-semibold text-red-600">
                 High Risk Alert
               </p>
 
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-[11px] sm:text-xs text-slate-500 truncate sm:overflow-visible">
                 {data.flagged.length} projects across 65 districts are high
                 risk. Estimated exposure {formatCr(data.fundsAtRisk)}.
               </p>
             </div>
           </div>
 
-          <button className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-slate-50 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30">
+          <button className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-slate-50 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30">
             View Investigation Queue
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </section>
 
         {/* ================= MAIN DASHBOARD GRID ================= */}
-        <section className="mt-3 grid min-w-0 items-start gap-3 xl:grid-cols-[1.10fr_0.82fr_1.10fr]">
+        <section className="mt-3 grid min-w-0 items-start gap-3 lg:grid-cols-[1.12fr_0.84fr_1.14fr] xl:grid-cols-[1.10fr_0.82fr_1.10fr]">
 
           {/* COLUMN 1 */}
           <div className="min-w-0">
@@ -208,12 +208,12 @@ export default function OverviewPage() {
               className="h-[450px] animate-dashboard-in"
             >
               <div className="flex h-[370px] flex-col">
-                <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
-                  <div className="h-[320px] w-[275px] shrink-0 sm:h-[350px] sm:w-[280px]">
+                <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-lg bg-slate-100 p-2">
+                  <div className="h-full w-full max-h-[320px] max-w-[280px]">
                     <IndiaMap />
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap justify-center gap-x-7 gap-y-2 text-[12px] text-slate-400">
+                <div className="mt-3 flex flex-wrap justify-center gap-x-5 gap-y-1 text-[11px] sm:text-[12px] text-slate-400">
                   <Legend color="bg-red-500" text="High Risk" />
                   <Legend color="bg-orange-400" text="Medium" />
                   <Legend color="bg-amber-400" text="Low Risk" />
@@ -236,9 +236,9 @@ export default function OverviewPage() {
             <Panel
               title="AI Risk Distribution"
               subtitle="Projects classified by AI risk score"
-              className="h-[370px] animate-dashboard-in"
+              className="h-[450px] animate-dashboard-in"
             >
-              <div className="pt-20 flex h-[200px] flex-col justify-center items-center gap-5">
+              <div className="flex h-[370px] flex-col items-center justify-between py-2">
                 <Donut
                   total={donutTotal}
                   high={donutHighOnly}
@@ -246,7 +246,7 @@ export default function OverviewPage() {
                   low={donutLow}
                   critical={donutCritical}
                 />
-                <div className="mt-4 w-[90%] space-y-4">
+                <div className="w-full space-y-3 px-2">
                   <RiskRow label="Critical Risk" value={donutCritical} total={donutTotal} color="bg-red-700" />
                   <RiskRow label="High Risk" value={donutHighOnly} total={donutTotal} color="bg-red-500" />
                   <RiskRow label="Medium Risk" value={donutMedium} total={donutTotal} color="bg-orange-400" />
@@ -258,7 +258,7 @@ export default function OverviewPage() {
             <Panel
               title="Key Insights (AI Generated)"
               action="View All"
-              className="mt-3 h-[430px] animate-dashboard-in"
+              className="mt-3 h-[350px] animate-dashboard-in"
             >
               <div className="space-y-3">
                 <Insight color="bg-red-500">
@@ -401,7 +401,7 @@ export default function OverviewPage() {
           </section>
         </footer>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -422,47 +422,31 @@ function DashboardAnimations() {
         from { transform: scaleY(0); opacity: .35; }
         to { transform: scaleY(1); opacity: 1; }
       }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes growX {
+        from { transform: scaleX(0); opacity: 0.65; }
+        to { transform: scaleX(1); opacity: 1; }
+      }
+      @keyframes growY {
+        from { transform: scaleY(0); opacity: 0.55; }
+        to { transform: scaleY(1); opacity: 1; }
+      }
       .animate-dashboard-in { animation: dashboardIn .35s ease-out both; }
       .animate-donut-in { animation: donutIn .55s ease-out both; }
       .animate-bar-grow { animation: barGrow .65s cubic-bezier(.2,.8,.2,1) both; }
       @media (prefers-reduced-motion: reduce) {
-        .animate-dashboard-in, .animate-donut-in, .animate-bar-grow { animation: none !important; }
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
       }
     `}</style>
   );
 }
-
-/* ================= SIMPLE UI ANIMATIONS ================= */
-
-<style jsx global>{`
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes growX {
-    from { transform: scaleX(0); opacity: 0.65; }
-    to { transform: scaleX(1); opacity: 1; }
-  }
-
-  @keyframes growY {
-    from { transform: scaleY(0); opacity: 0.55; }
-    to { transform: scaleY(1); opacity: 1; }
-  }
-
-  @keyframes donutIn {
-    from { opacity: 0; transform: scale(.88) rotate(-12deg); }
-    to { opacity: 1; transform: scale(1) rotate(0deg); }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-`}</style>
 
 /* ================= REUSABLE COMPONENTS ================= */
 
@@ -478,16 +462,17 @@ function KPI({
   danger?: boolean;
 }) {
   return (
-    <div className="flex min-h-[115px] flex-col justify-between rounded-xl border border-slate-200/70 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_6px_18px_rgba(15,23,42,0.07)] motion-safe:animate-[fadeUp_.35s_ease-out_both]">
-      <p className="mb-4 text-sm text-slate-400">{title}</p>
+    <div className="flex min-h-[105px] flex-col justify-between rounded-xl border border-slate-200/70 bg-white p-3 sm:p-3.5 xl:p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-[1px] hover:shadow-[0_6px_18px_rgba(15,23,42,0.07)] motion-safe:animate-[fadeUp_.35s_ease-out_both]">
+      <p className="mb-2 text-xs xl:text-sm text-slate-400 truncate">{title}</p>
 
-      <p className="mb-[4px] text-[25px] font-bold leading-none tracking-tight text-slate-900">
+      <p className="mb-1 text-[19px] sm:text-[21px] xl:text-[24px] font-bold leading-none tracking-tight text-slate-900 truncate">
         {value}
       </p>
 
       <p
-        className={`text-xs font-medium ${danger ? "text-red-500" : "text-emerald-600"
-          }`}
+        className={`text-[10px] sm:text-[11px] xl:text-xs font-medium truncate ${
+          danger ? "text-red-500" : "text-emerald-600"
+        }`}
       >
         ↑ {change}
       </p>

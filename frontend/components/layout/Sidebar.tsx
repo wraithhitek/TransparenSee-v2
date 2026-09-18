@@ -145,13 +145,18 @@ export default function Sidebar() {
 
   // Persist collapse state
   useEffect(() => {
-    const stored = localStorage.getItem("sidebar-collapsed");
+    // Clear stale legacy collapse key to ensure default is expanded
+    if (typeof window !== "undefined" && localStorage.getItem("sidebar-collapsed")) {
+      localStorage.removeItem("sidebar-collapsed");
+    }
+    const stored = localStorage.getItem("sidebar-collapsed-v2");
     if (stored === "true") setCollapsed(true);
+    else setCollapsed(false);
   }, []);
 
   const toggle = () => {
     setCollapsed((c) => {
-      localStorage.setItem("sidebar-collapsed", String(!c));
+      localStorage.setItem("sidebar-collapsed-v2", String(!c));
       return !c;
     });
   };
