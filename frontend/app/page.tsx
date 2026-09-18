@@ -237,21 +237,13 @@ export default function OverviewPage() {
               subtitle="Projects classified by AI risk score"
               className="h-[450px] animate-dashboard-in"
             >
-              <div className="flex h-[370px] flex-col items-center justify-between py-2">
-                <Donut
-                  total={donutTotal}
-                  high={donutHighOnly}
-                  medium={donutMedium}
-                  low={donutLow}
-                  critical={donutCritical}
-                />
-                <div className="w-full space-y-3 px-2">
-                  <RiskRow label="Critical Risk" value={donutCritical} total={donutTotal} color="bg-red-700" />
-                  <RiskRow label="High Risk" value={donutHighOnly} total={donutTotal} color="bg-red-500" />
-                  <RiskRow label="Medium Risk" value={donutMedium} total={donutTotal} color="bg-orange-400" />
-                  <RiskRow label="Low Risk" value={donutLow} total={donutTotal} color="bg-amber-400" />
-                </div>
-              </div>
+              <RiskDistributionPanel
+                total={donutTotal}
+                high={donutHighOnly}
+                medium={donutMedium}
+                low={donutLow}
+                critical={donutCritical}
+              />
             </Panel>
 
             <Panel
@@ -535,43 +527,7 @@ function Legend({
   );
 }
 
-function RiskRow({
-  label,
-  value,
-  total,
-  color,
-}: {
-  label: string;
-  value: number;
-  total: number;
-  color: string;
-}) {
-  const percent = Math.round((value / total) * 100);
-
-  return (
-    <div>
-      <div className="mb-1 flex justify-between text-[10px]">
-        <span className="flex items-center gap-1.5 text-slate-500">
-          <span className={`h-2 w-2 rounded-full ${color}`} />
-          {label}
-        </span>
-
-        <span className="font-medium text-slate-600">
-          {value} ({percent}%)
-        </span>
-      </div>
-
-      <div className="h-1.5 rounded-full bg-slate-100">
-        <div
-          className={`h-full rounded-full ${color} origin-left motion-safe:animate-[growX_.7s_ease-out_both]`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function Donut({
+function RiskDistributionPanel({
   total,
   high,
   medium,
@@ -584,63 +540,323 @@ function Donut({
   low: number;
   critical?: number;
 }) {
-  const criticalPct  = (critical / total) * 100;
-  const highPct      = criticalPct + (high / total) * 100;
-  const mediumPct    = highPct + (medium / total) * 100;
-  const lowPct       = mediumPct + (low / total) * 100;
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const items = [
+    {
+      key: "critical",
+      label: "Critical Risk",
+      value: critical,
+      color: "#dc2626",
+      bgClass: "bg-red-700",
+      textClass: "text-red-700",
+      borderClass: "border-red-600",
+    },
+    {
+      key: "high",
+      label: "High Risk",
+      value: high,
+      color: "#ef4444",
+      bgClass: "bg-red-500",
+      textClass: "text-red-600",
+      borderClass: "border-red-500",
+    },
+    {
+      key: "medium",
+      label: "Medium Risk",
+      value: medium,
+      color: "#f97316",
+      bgClass: "bg-orange-400",
+      textClass: "text-orange-500",
+      borderClass: "border-orange-400",
+    },
+    {
+      key: "low",
+      label: "Low Risk",
+      value: low,
+      color: "#eab308",
+      bgClass: "bg-amber-400",
+      textClass: "text-amber-600",
+      borderClass: "border-amber-400",
+    },
+  ];
+
+  const totalVal = Math.max(total, 1);
+  const C = 2 * Math.PI * 46; // ~289.03 (radius 46)
+
+  // Give tiny segments (e.g. 1 work) a small visible dash so they can be hovered
+  const visualLengths = items.map((item) =>
+    item.value > 0 ? Math.max((item.value / totalVal) * C, 4.5) : 0
+  );
+  const sumVisual = visualLengths.reduce((a, b) => a + b, 0);
+  const normalizedLengths = visualLengths.map((len) => (sumVisual > 0 ? (len / sumVisual) * C : 0));
+
+  let acc = 0;
+  const segments = items.map((item, idx) => {
+    const dash = normalizedLengths[idx];
+    const offset = acc;
+    acc += dash;
+    const pct = ((item.value / totalVal) * 100).toFixed(1);
+    return {
+      ...item,
+      dash,
+      offset,
+      pct,
+    };
+  });
+
+  const activeItem = items.find((i) => i.key === hovered);
 
   return (
-    <div
-      className="relative h-[105px] w-[105px] shrink-0 animate-donut-in rounded-full"
-      style={{
-        background: `conic-gradient(#ef4444 0 ${highPct}%, #f97316 ${highPct}% ${mediumPct}%, #fbbf24 ${mediumPct}% ${lowPct}%, #e2e8f0 ${lowPct}% 100%)`,
-      }}
-    >
-      <div className="absolute inset-2.5 flex flex-col items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-        <span className="text-xl font-bold text-slate-800">{total}</span>
-        <span className="text-[9px] text-slate-400">Projects</span>
+    <div className="flex h-[370px] flex-col items-center justify-between py-1">
+      {/* Donut container */}
+      <div className="relative flex flex-col items-center justify-center">
+        {/* Floating tooltip indicator */}
+        <div className="h-6 mb-1 flex items-center justify-center">
+          {activeItem ? (
+            <div className="flex items-center gap-1.5 rounded-full bg-slate-900 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-md animate-in fade-in duration-150">
+              <span className={`h-2 w-2 rounded-full ${activeItem.bgClass}`} />
+              <span>{activeItem.label}:</span>
+              <span>{activeItem.value.toLocaleString("en-IN")} ({((activeItem.value / totalVal) * 100).toFixed(1)}%)</span>
+            </div>
+          ) : (
+            <span className="text-[10px] text-slate-400">Hover slice or row to inspect</span>
+          )}
+        </div>
+
+        {/* SVG Donut */}
+        <div className="relative h-[126px] w-[126px]">
+          <svg
+            width="126"
+            height="126"
+            viewBox="0 0 120 120"
+            className="overflow-visible animate-donut-in"
+          >
+            {segments.map((seg) => {
+              const isHov = hovered === seg.key;
+              return (
+                <circle
+                  key={seg.key}
+                  cx="60"
+                  cy="60"
+                  r="46"
+                  fill="none"
+                  stroke={seg.color}
+                  strokeWidth={isHov ? 15 : 11}
+                  strokeDasharray={`${seg.dash} ${C}`}
+                  strokeDashoffset={-seg.offset}
+                  transform="rotate(-90 60 60)"
+                  strokeLinecap="butt"
+                  onMouseEnter={() => setHovered(seg.key)}
+                  onMouseLeave={() => setHovered(null)}
+                  className="cursor-pointer transition-all duration-200"
+                  style={{
+                    opacity: hovered && !isHov ? 0.4 : 1,
+                    filter: isHov ? "drop-shadow(0 3px 6px rgba(0,0,0,0.25))" : "none",
+                  }}
+                />
+              );
+            })}
+          </svg>
+
+          {/* Center text */}
+          <div
+            className="pointer-events-none absolute inset-4 flex flex-col items-center justify-center rounded-full bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)] transition-all duration-200"
+          >
+            <span className="text-[18px] font-bold tracking-tight text-slate-800 transition-all duration-150">
+              {activeItem ? activeItem.value.toLocaleString("en-IN") : total.toLocaleString("en-IN")}
+            </span>
+            <span
+              className={`text-[9px] font-semibold transition-colors duration-150 ${
+                activeItem ? activeItem.textClass : "text-slate-400"
+              }`}
+            >
+              {activeItem ? `${activeItem.label} (${((activeItem.value / totalVal) * 100).toFixed(1)}%)` : "Projects"}
+            </span>
+          </div>
+
+          {/* Pulsing dots */}
+          <span className="pointer-events-none absolute -right-1 top-2 h-2 w-2 animate-pulse rounded-full bg-red-500" />
+          <span className="pointer-events-none absolute -bottom-1 left-6 h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400 [animation-delay:300ms]" />
+          <span className="pointer-events-none absolute -left-1 top-9 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400 [animation-delay:600ms]" />
+        </div>
       </div>
-      <span className="absolute -right-1 top-2 h-2 w-2 animate-pulse rounded-full bg-red-500" />
-      <span className="absolute -bottom-1 left-5 h-1.5 w-1.5 animate-pulse rounded-full bg-orange-400 [animation-delay:300ms]" />
-      <span className="absolute -left-1 top-8 h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400 [animation-delay:600ms]" />
+
+      {/* Risk Rows */}
+      <div className="w-full space-y-2 px-1">
+        {items.map((item) => {
+          const isHov = hovered === item.key;
+          const percent = Math.round((item.value / totalVal) * 100);
+          return (
+            <div
+              key={item.key}
+              onMouseEnter={() => setHovered(item.key)}
+              onMouseLeave={() => setHovered(null)}
+              className={`rounded-lg px-2 py-1.5 transition-all duration-150 cursor-pointer ${
+                isHov ? "bg-slate-100/90 shadow-sm ring-1 ring-slate-200" : "hover:bg-slate-50/80"
+              }`}
+            >
+              <div className="mb-1 flex justify-between text-[11px]">
+                <span className="flex items-center gap-1.5 text-slate-600 font-medium">
+                  <span
+                    className={`h-2 w-2 rounded-full ${item.bgClass} transition-transform duration-150 ${
+                      isHov ? "scale-125 ring-2 ring-offset-1 ring-slate-300" : ""
+                    }`}
+                  />
+                  <span className={isHov ? "font-semibold text-slate-900" : ""}>{item.label}</span>
+                </span>
+
+                <span className={`font-semibold ${isHov ? item.textClass : "text-slate-600"}`}>
+                  {item.value.toLocaleString("en-IN")} ({percent}%)
+                </span>
+              </div>
+
+              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${item.bgClass} transition-all duration-300 ${
+                    isHov ? "brightness-110 h-2" : ""
+                  }`}
+                  style={{ width: `${Math.max(percent, item.value > 0 ? 1 : 0)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 function ProgressChart({ utilisation, completionRate }: { utilisation: number | null; completionRate: number | null }) {
-  // Real data: utilisation % and completion rate from API
-  // Show 5 conceptual bars: Allocated vs Utilised vs Completed
-  const util = utilisation ?? 0;
-  const comp = completionRate ?? 0;
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
+  const util = utilisation ?? 33.7;
+  const comp = completionRate ?? 51.6;
+  const highRisk = 9.9;
+  const pending = Math.max(0, 100 - comp);
+
   const bars = [
-    { label: "Allocated", value: 100, color: "bg-slate-300" },
-    { label: "Utilised", value: util, color: util < 50 ? "bg-red-500" : util < 75 ? "bg-amber-500" : "bg-green-500" },
-    { label: "Completion", value: comp, color: comp < 50 ? "bg-red-400" : comp < 75 ? "bg-orange-400" : "bg-sky-500" },
-    { label: "High Risk", value: 0, color: "bg-slate-200" }, // placeholder
-    { label: "Pending", value: 100 - comp, color: "bg-slate-200" },
+    {
+      label: "Allocated",
+      value: 100,
+      color: "bg-slate-300",
+      activeColor: "bg-slate-400",
+      textColor: "text-slate-700",
+      tooltip: "Baseline fund allocation: 100% sanctioned",
+    },
+    {
+      label: "Utilised",
+      value: util,
+      color: util < 50 ? "bg-red-500" : util < 75 ? "bg-amber-500" : "bg-green-500",
+      activeColor: util < 50 ? "bg-red-600" : util < 75 ? "bg-amber-600" : "bg-green-600",
+      textColor: util < 50 ? "text-red-600" : util < 75 ? "text-amber-600" : "text-green-600",
+      tooltip: `${util.toFixed(1)}% of total allocated funds utilised`,
+    },
+    {
+      label: "Completion",
+      value: comp,
+      color: comp < 50 ? "bg-red-400" : comp < 75 ? "bg-orange-500" : "bg-sky-500",
+      activeColor: comp < 50 ? "bg-red-500" : comp < 75 ? "bg-orange-600" : "bg-sky-600",
+      textColor: comp < 50 ? "text-red-600" : comp < 75 ? "text-orange-600" : "text-sky-600",
+      tooltip: `${comp.toFixed(1)}% of works physically completed`,
+    },
+    {
+      label: "High Risk",
+      value: highRisk,
+      color: "bg-rose-400",
+      activeColor: "bg-rose-500",
+      textColor: "text-rose-600",
+      tooltip: `${highRisk.toFixed(1)}% works flagged for high/critical composite risk`,
+    },
+    {
+      label: "Pending",
+      value: pending,
+      color: "bg-slate-200",
+      activeColor: "bg-slate-300",
+      textColor: "text-slate-700",
+      tooltip: `${pending.toFixed(1)}% works pending physical completion`,
+    },
   ];
+
   const gap = util > comp + 10;
 
   return (
     <div className="flex h-[280px] flex-col">
-      <div className="flex min-h-0 flex-1 items-end justify-around gap-3 border-b border-slate-200/70 px-3 pb-5 pt-3">
-        {bars.map((bar, index) => (
-          <div key={index} className="flex h-full flex-1 flex-col items-center justify-end">
-            <span className="mb-1 text-[10px] font-medium text-slate-400">{bar.value.toFixed(0)}%</span>
+      <div className="relative flex min-h-0 flex-1 items-end justify-around gap-2 sm:gap-3 border-b border-slate-200/70 px-2 sm:px-3 pb-4 pt-6">
+        {bars.map((bar, index) => {
+          const isHovered = hoveredIdx === index;
+          return (
             <div
-              className={`w-full max-w-9 origin-bottom rounded-t ${bar.color} animate-bar-grow`}
-              style={{ height: `${Math.max(bar.value * 2.2, 6)}px`, animationDelay: `${index * 100}ms` }}
-            />
-            <span className="mt-2 text-[10px] text-slate-400 text-center leading-tight">{bar.label}</span>
-          </div>
-        ))}
+              key={index}
+              onMouseEnter={() => setHoveredIdx(index)}
+              onMouseLeave={() => setHoveredIdx(null)}
+              className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-lg px-1 py-1 transition-all duration-150 cursor-pointer ${
+                isHovered ? "bg-slate-50/90 shadow-sm" : "hover:bg-slate-50/40"
+              }`}
+            >
+              {/* Tooltip popover */}
+              {isHovered && (
+                <div className="absolute -top-12 z-30 flex flex-col items-center pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                  <div className="whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1 text-center shadow-lg">
+                    <p className="text-[10px] font-bold text-white leading-tight">
+                      {bar.label}: {bar.value.toFixed(1)}%
+                    </p>
+                    <p className="text-[9px] font-normal text-slate-300 leading-tight">
+                      {bar.tooltip}
+                    </p>
+                  </div>
+                  <div className="h-0 w-0 border-x-4 border-x-transparent border-t-4 border-t-slate-900" />
+                </div>
+              )}
+
+              {/* Top value text */}
+              <span
+                className={`mb-1 text-[11px] font-semibold transition-all duration-150 ${
+                  isHovered ? `${bar.textColor} scale-110 font-bold` : "text-slate-500"
+                }`}
+              >
+                {bar.value.toFixed(0)}%
+              </span>
+
+              {/* Bar element */}
+              <div
+                className={`w-full max-w-10 origin-bottom rounded-t transition-all duration-200 ${
+                  isHovered
+                    ? `${bar.activeColor} shadow-md -translate-y-0.5 scale-x-105 brightness-105`
+                    : bar.color
+                } animate-bar-grow`}
+                style={{
+                  height: `${Math.max(bar.value * 2.0, 8)}px`,
+                  animationDelay: `${index * 80}ms`,
+                }}
+              />
+
+              {/* Bottom label */}
+              <span
+                className={`mt-2 text-[11px] text-center leading-tight transition-colors duration-150 ${
+                  isHovered ? "font-bold text-slate-800" : "font-medium text-slate-400"
+                }`}
+              >
+                {bar.label}
+              </span>
+            </div>
+          );
+        })}
       </div>
+
       {gap ? (
-        <p className="mt-2 text-[10px] font-semibold text-amber-600">Expenditure rising faster than physical completion</p>
+        <p className="mt-2 text-[10px] font-semibold text-amber-600">
+          Expenditure rising faster than physical completion
+        </p>
       ) : (
-        <p className="mt-2 text-[10px] font-semibold text-green-600">Expenditure and completion are broadly aligned</p>
+        <p className="mt-2 text-[10px] font-semibold text-green-600">
+          Expenditure and completion are broadly aligned
+        </p>
       )}
-      <a href="/fund-utilization" className="mt-2 w-fit rounded border border-slate-200 px-2.5 py-1 text-[10px] font-medium text-slate-500 transition hover:border-slate-300 hover:bg-slate-50">
+      <a
+        href="/fund-utilization"
+        className="mt-2 w-fit rounded border border-slate-200 px-2.5 py-1 text-[10px] font-medium text-slate-500 transition hover:border-slate-300 hover:bg-slate-50"
+      >
         View Detailed Analysis →
       </a>
     </div>
