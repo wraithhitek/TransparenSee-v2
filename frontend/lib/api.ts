@@ -11,23 +11,36 @@ const headers: Record<string, string> = {
   "content-type": "application/json",
 };
 
+function getApiBase(): string {
+  // In the browser, route through the Next.js rewrite proxy (/backend-api)
+  // to avoid client-side ISP DNS blocks and CORS preflight issues.
+  return typeof window !== "undefined" ? "/backend-api" : BASE;
+}
+
 async function get<T>(
   path: string,
   params?: Record<string, string | number | undefined>
 ): Promise<T> {
-  const url = new URL(BASE + path);
+  const base = getApiBase();
+  let urlStr = base + path;
   if (params) {
+    const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v));
+      if (v !== undefined && v !== null && v !== "") searchParams.set(k, String(v));
     });
+    const qs = searchParams.toString();
+    if (qs) {
+      urlStr += (urlStr.includes("?") ? "&" : "?") + qs;
+    }
   }
-  const res = await fetch(url.toString(), { headers, cache: "no-store" });
+  const res = await fetch(urlStr, { headers, cache: "no-store" });
   if (!res.ok) throw new Error(`API ${path} → ${res.status}: ${await res.text()}`);
   return res.json() as Promise<T>;
 }
 
 async function patch<T>(path: string, body: unknown): Promise<T> {
-  const res = await fetch(BASE + path, {
+  const base = getApiBase();
+  const res = await fetch(base + path, {
     method: "PATCH",
     headers,
     body: JSON.stringify(body),
