@@ -314,27 +314,28 @@ export function MpView() {
       )}
 
       {/* ================= MP FIRST-PERSON ACCOUNTABILITY HEADER ================= */}
-      <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
-              Constituency Dashboard — {selectedMp} ({selectedDistrict}, {selectedState})
-            </h1>
-            <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
-              18th Lok Sabha
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+      <header className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 pr-3">
+          <h1
+            className="truncate text-[19px] sm:text-[21px] font-bold leading-tight tracking-tight text-slate-900"
+            title={`Constituency Dashboard — ${selectedMp} (${selectedDistrict}, ${selectedState})`}
+          >
+            Constituency Dashboard — {selectedMp} ({selectedDistrict}, {selectedState})
+          </h1>
+          <p className="mt-0.5 truncate text-xs text-slate-500">
             First-person accountability: <strong className="text-amber-900">₹{entitlementUsedCr} Cr deployed across {totalRecommendedCount} works</strong> in your constituency ({selectedDistrict}) · Serving an estimated 4.2 Lakh citizen beneficiaries
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
+          <span className="inline-flex h-[36px] items-center rounded-lg border border-amber-300 bg-amber-50 px-3 text-xs font-bold text-amber-800 whitespace-nowrap shadow-2xs">
+            18th Lok Sabha
+          </span>
           <button
             onClick={() => setRecommendModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-md border border-amber-400 bg-amber-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 cursor-pointer transition-all active:scale-95"
+            className="inline-flex h-[36px] items-center gap-1.5 rounded-lg border border-amber-500 bg-amber-600 px-3.5 text-xs font-bold text-white shadow-2xs hover:bg-amber-700 cursor-pointer transition-all active:scale-95 whitespace-nowrap"
           >
-            <PlusCircle size={13} />
+            <PlusCircle size={14} />
             <span>Recommend New Work</span>
           </button>
         </div>

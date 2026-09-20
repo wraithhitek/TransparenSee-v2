@@ -331,30 +331,31 @@ export function DistrictView() {
       )}
 
       {/* ================= DISTRICT OPERATIONAL HEADER ================= */}
-      <header className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
-              District Collectorate Command — {selectedDistrict}, {selectedState}
-            </h1>
-            <span className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800">
-              Ground Execution Mode
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs text-slate-500">
+      <header className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1 pr-3">
+          <h1
+            className="truncate text-[19px] sm:text-[21px] font-bold leading-tight tracking-tight text-slate-900"
+            title={`District Collectorate Command — ${selectedDistrict}, ${selectedState}`}
+          >
+            District Collectorate Command — {selectedDistrict}, {selectedState}
+          </h1>
+          <p className="mt-0.5 truncate text-xs text-slate-500">
             Operational Imperative: <strong className="text-emerald-900">{delayedWorksCount} works past SLA threshold</strong> · {overdueInspections} field inspections overdue · Next District Coordination Committee in 4 days
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2.5">
+          <span className="inline-flex h-[36px] items-center rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-xs font-bold text-emerald-800 whitespace-nowrap shadow-2xs">
+            Ground Execution Mode
+          </span>
           <button
             onClick={() => {
               setInspectionTargetWork(districtWorks[0]?.projectName || "RCC Drain & Road in Ward 14");
               setInspectionModalOpen(true);
             }}
-            className="flex items-center gap-1.5 rounded-md border border-emerald-300 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-emerald-700 cursor-pointer transition-all duration-150 active:scale-95"
+            className="inline-flex h-[36px] items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-2xs hover:bg-emerald-700 cursor-pointer transition-all duration-150 active:scale-95 whitespace-nowrap"
           >
-            <Camera size={13} />
+            <Camera size={14} />
             <span>Order Field Inspection</span>
           </button>
         </div>

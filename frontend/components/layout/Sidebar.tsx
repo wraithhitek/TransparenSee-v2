@@ -21,8 +21,6 @@ import {
   TrendingUp,
   Users,
   WalletCards,
-  ChevronLeft,
-  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 
@@ -191,17 +189,8 @@ export default function Sidebar() {
     }, 120);
   };
 
-  const toggle = () => {
-    setCollapsed((c) => {
-      const next = !c;
-      localStorage.setItem("sidebar-collapsed-v2", String(next));
-      localStorage.setItem("sidebar-auto-hover-v1", "true");
-      return next;
-    });
-  };
-
-  // Expanded if manually pinned open OR if cursor is hovering over it
-  const isExpanded = !collapsed || isHovered;
+  // Expanded automatically when cursor hovers over the sidebar, minimized when cursor leaves
+  const isExpanded = isHovered;
   const w = isExpanded ? "w-[260px]" : "w-[64px]";
 
   return (
@@ -282,16 +271,6 @@ export default function Sidebar() {
           .sidebar-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
         `}</style>
       </aside>
-
-      {/* Collapse toggle button — floats at edge of sidebar */}
-      <button
-        onClick={toggle}
-        aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-        title={isExpanded ? (collapsed ? "Pin sidebar open" : "Collapse sidebar") : "Expand sidebar"}
-        className={`pointer-events-auto fixed top-[76px] z-[60] flex h-6 w-6 items-center justify-center rounded-full border border-[#2a4a66] bg-[#0b2743] text-[#7892ad] shadow-md transition-all duration-200 hover:bg-[#1a3857] hover:text-white ${isExpanded ? "left-[248px]" : "left-[52px]"}`}
-      >
-        {isExpanded ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
-      </button>
     </div>
   );
 }
