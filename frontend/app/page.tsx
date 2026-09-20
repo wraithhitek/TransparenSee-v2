@@ -1110,17 +1110,17 @@ function IndiaMap({
   const stateStyles = useMemo(() => {
     const rules = Object.entries(stateStatsMap).map(([id, stats]) => {
       const isDimmed = activeTier !== null && stats.tier !== activeTier;
-      return `#${id} { fill: ${stats.color}; opacity: ${isDimmed ? 0.35 : 1}; }`;
+      return `.india-map-svg #${id} { fill: ${stats.color}; opacity: ${isDimmed ? 0.35 : 1}; }`;
     });
 
     return `
-      svg path {
+      .india-map-svg path {
         cursor: pointer;
         stroke: #ffffff;
         stroke-width: 0.8;
         transition: fill 0.2s ease, opacity 0.2s ease, filter 0.15s ease;
       }
-      svg path:hover {
+      .india-map-svg path:hover {
         filter: brightness(1.15);
       }
       ${rules.join("\n")}
@@ -1154,7 +1154,7 @@ function IndiaMap({
       <svg
         viewBox="0 0 611.86 695.7"
         xmlns="http://www.w3.org/2000/svg"
-        className="h-full w-full"
+        className="india-map-svg h-full w-full"
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label="India district risk heatmap"

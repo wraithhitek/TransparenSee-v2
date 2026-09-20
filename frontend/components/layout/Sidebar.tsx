@@ -115,12 +115,38 @@ function NavigationSection({
 
 // Official State Emblem of India (Lion Capital of Ashoka)
 function EmblemOfIndia({ size = 28 }: { size?: number }) {
+  const [loadError, setLoadError] = useState(false);
+
+  if (loadError) {
+    // Elegant fallback SVG of Ashoka Chakra / State Emblem motif
+    return (
+      <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-full w-full object-contain">
+        <circle cx="16" cy="16" r="14" stroke="#fbbf24" strokeWidth="1.5" fill="#1e3a8a" fillOpacity="0.4" />
+        <circle cx="16" cy="16" r="11" stroke="#fbbf24" strokeWidth="0.8" strokeDasharray="1.5 1.5" />
+        <circle cx="16" cy="16" r="3" fill="#fbbf24" />
+        {/* Ashoka Chakra 24 spokes */}
+        {[0, 15, 30, 45, 60, 75, 90, 105, 120, 135, 150, 165, 180, 195, 210, 225, 240, 255, 270, 285, 300, 315, 330, 345].map((deg) => (
+          <line
+            key={deg}
+            x1="16"
+            y1="16"
+            x2={16 + 10.5 * Math.cos((deg * Math.PI) / 180)}
+            y2={16 + 10.5 * Math.sin((deg * Math.PI) / 180)}
+            stroke="#fbbf24"
+            strokeWidth="0.75"
+          />
+        ))}
+      </svg>
+    );
+  }
+
   return (
     <img
-      src="/emblem-of-india.svg"
+      src="/emblem-of-india.svg?v=20260920"
       alt="State Emblem of India"
       width={size}
       height={size}
+      onError={() => setLoadError(true)}
       className="h-full w-full object-contain filter brightness-0 invert drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
     />
   );
@@ -159,8 +185,11 @@ export default function Sidebar() {
           {/* Logo area */}
           <div className={`shrink-0 ${collapsed ? "px-2 pb-3 pt-4" : "px-5 pb-4 pt-5"}`}>
             <Link href="/" className="group flex items-center gap-0">
-              <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#2f72ed] to-[#174fc7] border border-blue-400/30 p-1.5 shadow-[0_5px_16px_rgba(37,99,235,0.24)] transition-all duration-200 ${collapsed ? "size-[44px] mx-auto" : "size-[40px]"}`}>
-                <div className="absolute inset-0 bg-white/[0.04]" />
+              <div
+                title="State Emblem of India · TransparenSee"
+                className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0b2743] border border-amber-400/50 p-1.5 shadow-[0_4px_16px_rgba(30,58,138,0.35)] transition-all duration-200 ${collapsed ? "size-[44px] mx-auto" : "size-[40px]"}`}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-amber-400/10 pointer-events-none" />
                 <EmblemOfIndia size={collapsed ? 30 : 26} />
               </div>
 
