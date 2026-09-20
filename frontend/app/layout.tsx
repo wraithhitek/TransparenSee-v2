@@ -10,6 +10,8 @@ export const metadata: Metadata = {
     "AI-powered monitoring and accountability dashboard for MPLADS implementation.",
 };
 
+import { RoleProvider } from "@/context/RoleContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,11 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#f6f8fb] font-sans text-[#172033] antialiased">
-        <Sidebar />
-        <TopBar />
-        <MainWrapper>
-          {children}
-        </MainWrapper>
+        <RoleProvider>
+          <Sidebar />
+          <TopBar />
+          <MainWrapper>
+            {children}
+          </MainWrapper>
+        </RoleProvider>
       </body>
     </html>
   );

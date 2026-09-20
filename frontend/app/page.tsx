@@ -14,6 +14,11 @@ import {
 
 import { fetchKpis, fetchWorks, fetchStates, toWorkShape, BASE, type ApiKpis, type WorkShape, type ApiState } from "@/lib/api";
 import { getRiskBand } from "@/lib/riskUtils";
+import { useRole } from "@/context/RoleContext";
+import { RoleGovernanceBar } from "@/components/overview/RoleGovernanceBar";
+import { StateView } from "@/components/overview/StateView";
+import { DistrictView } from "@/components/overview/DistrictView";
+import { MpView } from "@/components/overview/MpView";
 
 const formatCr = (value: number) =>
   `₹ ${(value / 10_000_000).toFixed(1)} Cr`;
@@ -24,6 +29,7 @@ const getWorkExpenditure = (work: WorkShape) => work.sanctionedAmount ?? 0;
 const getWorkProjectName = (work: WorkShape) => work.projectName ?? "Unnamed project";
 
 export default function OverviewPage() {
+  const { role } = useRole();
   const [works, setWorks]     = useState<WorkShape[]>([]);
   const [kpis, setKpis]       = useState<ApiKpis | null>(null);
   const [states, setStates]   = useState<ApiState[]>([]);
@@ -111,35 +117,40 @@ export default function OverviewPage() {
     <div className="w-full text-slate-800">
       <DashboardAnimations />
 
-        {/* ================= API STATUS BANNER ================= */}
-        {apiError && (
-          <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
-            ⚠ API Error: {apiError} (Backend: <code>{BASE}</code>)
-          </div>
-        )}
-        {!apiError && !loading && kpis && (
-          <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700">
-            ✓ Live data from ML pipeline · Run: {kpis.run_id} · {kpis.works_recommended.toLocaleString("en-IN")} works · Data quality: {kpis.data_quality_pct?.toFixed(1)}%
-          </div>
-        )}
-        {loading && (
-          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700 animate-pulse">
-            ⟳ Loading live data from ML pipeline…
-          </div>
-        )}
+      {/* Role-Based Access Control Governance Switcher Bar */}
+      <RoleGovernanceBar />
 
-        {/* ================= HEADER ================= */}
+      {/* ================= API STATUS BANNER ================= */}
+      {apiError && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+          ⚠ API Error: {apiError} (Backend: <code>{BASE}</code>)
+        </div>
+      )}
+      {!apiError && !loading && kpis && (
+        <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700">
+          ✓ Live data from ML pipeline · Run: {kpis.run_id} · {kpis.works_recommended.toLocaleString("en-IN")} works · Data quality: {kpis.data_quality_pct?.toFixed(1)}%
+        </div>
+      )}
+      {loading && (
+        <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-xs text-blue-700 animate-pulse">
+          ⟳ Loading live data from ML pipeline…
+        </div>
+      )}
 
-        <header className="mb-3.5">
-          <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
-            National Overview
-          </h1>
+      {/* ================= MINISTRY TIER: NATIONAL OVERVIEW ================= */}
+      {role === "ministry" && (
+        <>
+          {/* ================= HEADER ================= */}
+          <header className="mb-3.5">
+            <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
+              National Overview
+            </h1>
 
-          <p className="mt-0.5 text-xs sm:text-sm text-slate-400">
-            AI-powered monitoring of funds, projects, implementation risk and
-            compliance
-          </p>
-        </header>
+            <p className="mt-0.5 text-xs sm:text-sm text-slate-400">
+              AI-powered monitoring of funds, projects, implementation risk and
+              compliance
+            </p>
+          </header>
 
         {/* ================= KPI CARDS ================= */}
 
@@ -422,9 +433,20 @@ export default function OverviewPage() {
             />
           </section>
         </footer>
-      </div>
-    );
-  }
+        </>
+      )}
+
+      {/* ================= STATE TIER: SECRETARIAT DASHBOARD ================= */}
+      {role === "state" && <StateView />}
+
+      {/* ================= DISTRICT TIER: COLLECTORATE DASHBOARD ================= */}
+      {role === "district" && <DistrictView />}
+
+      {/* ================= MP CONSTITUENCY TIER: PARLIAMENTARY VIEW ================= */}
+      {role === "mp" && <MpView />}
+    </div>
+  );
+}
 
 /* ================= SIMPLE DASHBOARD ANIMATIONS ================= */
 

@@ -17,7 +17,13 @@ import {
   ShieldCheck,
   UserRound,
   X,
+  Layers,
+  Landmark,
+  Building2,
+  Briefcase,
+  UserCheck,
 } from "lucide-react";
+import { useRole, ROLES, type RoleType } from "@/context/RoleContext";
 
 const regions = [
   "All India",
@@ -205,8 +211,21 @@ function getCalendarDays(
 }
 
 export default function TopBar() {
+  const {
+    role,
+    setRole,
+    roleMeta,
+    selectedState,
+    setSelectedState,
+    selectedDistrict,
+    selectedMp,
+  } = useRole();
+
   const [selectedRegion, setSelectedRegion] =
     useState("All India");
+
+  const [roleOpen, setRoleOpen] =
+    useState(false);
 
   const [regionOpen, setRegionOpen] =
     useState(false);
@@ -244,6 +263,9 @@ export default function TopBar() {
   const [notifications, setNotifications] =
     useState(notificationItems);
 
+  const roleRef =
+    useRef<HTMLDivElement>(null);
+
   const regionRef =
     useRef<HTMLDivElement>(null);
 
@@ -258,6 +280,15 @@ export default function TopBar() {
 
   const profileRef =
     useRef<HTMLDivElement>(null);
+
+  const displayRegion =
+    role === "ministry"
+      ? selectedRegion
+      : role === "state"
+      ? selectedState
+      : role === "district"
+      ? selectedDistrict
+      : "MP Works";
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -281,6 +312,13 @@ export default function TopBar() {
     ) {
       const target =
         event.target as Node;
+
+      if (
+        roleRef.current &&
+        !roleRef.current.contains(target)
+      ) {
+        setRoleOpen(false);
+      }
 
       if (
         regionRef.current &&
@@ -331,8 +369,18 @@ export default function TopBar() {
     };
   }, []);
 
+  function toggleRole() {
+    setRoleOpen((value) => !value);
+    setRegionOpen(false);
+    setDateOpen(false);
+    setNotificationOpen(false);
+    setHelpOpen(false);
+    setProfileOpen(false);
+  }
+
   function toggleRegion() {
     setRegionOpen((value) => !value);
+    setRoleOpen(false);
     setDateOpen(false);
     setNotificationOpen(false);
     setHelpOpen(false);
@@ -341,6 +389,7 @@ export default function TopBar() {
 
   function toggleDate() {
     setDateOpen((value) => !value);
+    setRoleOpen(false);
     setRegionOpen(false);
     setNotificationOpen(false);
     setHelpOpen(false);
@@ -357,6 +406,7 @@ export default function TopBar() {
 
   function toggleNotifications() {
     setNotificationOpen((value) => !value);
+    setRoleOpen(false);
     setRegionOpen(false);
     setDateOpen(false);
     setHelpOpen(false);
@@ -365,6 +415,7 @@ export default function TopBar() {
 
   function toggleHelp() {
     setHelpOpen((value) => !value);
+    setRoleOpen(false);
     setRegionOpen(false);
     setDateOpen(false);
     setNotificationOpen(false);
@@ -373,6 +424,7 @@ export default function TopBar() {
 
   function toggleProfile() {
     setProfileOpen((value) => !value);
+    setRoleOpen(false);
     setRegionOpen(false);
     setDateOpen(false);
     setNotificationOpen(false);
@@ -490,6 +542,94 @@ export default function TopBar() {
 
         <div className="absolute right-[22px] top-[11px] flex h-[40px] items-center gap-[7px]">
 
+          {/* Active Governance Role Tier Selector */}
+          <div
+            ref={roleRef}
+            className="relative"
+          >
+            <button
+              type="button"
+              onClick={toggleRole}
+              aria-label="Select governance tier role"
+              className="flex h-[34px] items-center gap-[6px] rounded-[6px] border border-[#D0D5DD] bg-gradient-to-r from-slate-50 to-white px-[8px] shadow-[0_1px_2px_rgba(16,24,40,0.03)] transition-all duration-150 hover:border-[#B4BCC7] hover:bg-slate-50"
+            >
+              <span className="flex h-[18px] w-[18px] items-center justify-center rounded-full bg-blue-100 text-blue-700 text-[9px] font-extrabold tracking-tight">
+                {role === "ministry" ? "N" : role === "state" ? "S" : role === "district" ? "D" : "MP"}
+              </span>
+
+              <div className="flex flex-col items-start text-left">
+                <span className="truncate !text-[11px] !font-bold !leading-[13px] !text-[#101828]">
+                  {role === "ministry" ? "Ministry" : role === "state" ? "State" : role === "district" ? "District" : "MP"}
+                </span>
+                <span className="truncate !text-[8px] !font-semibold uppercase tracking-wider !leading-[9px] !text-blue-600">
+                  {roleMeta.tier}
+                </span>
+              </div>
+
+              <ChevronDown
+                size={13}
+                strokeWidth={1.8}
+                className={[
+                  "ml-0.5 shrink-0 text-[#667085]",
+                  "transition-transform duration-150",
+                  roleOpen ? "rotate-180" : "",
+                ].join(" ")}
+              />
+            </button>
+
+            {roleOpen && (
+              <div className="absolute right-0 top-[40px] z-[75] w-[260px] overflow-hidden rounded-[8px] border border-[#EAECF0] bg-white p-[6px] shadow-[0_12px_28px_rgba(16,24,40,0.14)] animate-dashboard-in">
+                <div className="px-2 py-1.5 border-b border-slate-100 mb-1">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Governance Tier Access
+                  </p>
+                  <p className="text-[9px] text-slate-500">
+                    Role-Based Access & Geographical Scope
+                  </p>
+                </div>
+                {(["ministry", "state", "district", "mp"] as RoleType[]).map((rKey) => {
+                  const meta = ROLES[rKey];
+                  const isSelected = role === rKey;
+                  return (
+                    <button
+                      key={rKey}
+                      type="button"
+                      onClick={() => {
+                        setRole(rKey);
+                        setRoleOpen(false);
+                      }}
+                      className={[
+                        "flex w-full items-start gap-2 rounded-[6px] p-2 text-left transition-all duration-150",
+                        isSelected
+                          ? "bg-blue-50/80 border border-blue-200"
+                          : "hover:bg-slate-50 border border-transparent",
+                      ].join(" ")}
+                    >
+                      <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold ${
+                        isSelected ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {rKey === "ministry" ? "N" : rKey === "state" ? "S" : rKey === "district" ? "D" : "MP"}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-[11px] font-bold leading-tight ${isSelected ? "text-blue-900" : "text-slate-800"}`}>
+                            {meta.label}
+                          </span>
+                          <span className="text-[8px] font-semibold text-slate-400 uppercase tracking-wider">
+                            {meta.tier}
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.5">
+                          {meta.subtitle}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <div
             ref={regionRef}
             className="relative"
@@ -497,7 +637,7 @@ export default function TopBar() {
             <button
               type="button"
               onClick={toggleRegion}
-              className="flex h-[34px] w-[105px] items-center justify-between rounded-[6px] border border-[#E4E7EC] bg-white px-[9px] transition-all duration-150 hover:border-[#D0D5DD] hover:bg-[#F9FAFB]"
+              className="flex h-[34px] w-[120px] items-center justify-between rounded-[6px] border border-[#E4E7EC] bg-white px-[9px] transition-all duration-150 hover:border-[#D0D5DD] hover:bg-[#F9FAFB]"
             >
               <span className="flex min-w-0 items-center gap-[5px]">
                 <MapPin
@@ -507,7 +647,7 @@ export default function TopBar() {
                 />
 
                 <span className="truncate !text-[11px] !font-medium !leading-[14px] !text-[#344054]">
-                  {selectedRegion}
+                  {displayRegion}
                 </span>
               </span>
 
@@ -528,7 +668,7 @@ export default function TopBar() {
               <div className="absolute right-0 top-[40px] z-[70] w-[205px] overflow-hidden rounded-[8px] border border-[#EAECF0] bg-white p-[5px] shadow-[0_10px_26px_rgba(16,24,40,0.12)]">
                 {regions.map((region) => {
                   const selected =
-                    selectedRegion === region;
+                    selectedRegion === region || (role === "state" && selectedState === region);
 
                   return (
                     <button
@@ -536,6 +676,9 @@ export default function TopBar() {
                       type="button"
                       onClick={() => {
                         setSelectedRegion(region);
+                        if (region !== "All India") {
+                          setSelectedState(region);
+                        }
                         setRegionOpen(false);
                       }}
                       className={[
@@ -1062,19 +1205,19 @@ export default function TopBar() {
 
                 <div className="px-[9px] pb-[9px] pt-[8px]">
                   <div className="flex items-center gap-[9px]">
-                    <div className="relative flex h-[35px] w-[35px] shrink-0 items-center justify-center rounded-full bg-[#F1E2D3] !text-[15px] !font-bold text-[#8A5A3B]">
-                      A
+                    <div className="relative flex h-[35px] w-[35px] shrink-0 items-center justify-center rounded-full bg-blue-100 !text-[13px] !font-bold text-blue-800">
+                      {role === "ministry" ? "DG" : role === "state" ? "CS" : role === "district" ? "DM" : "MP"}
 
                       <span className="absolute bottom-0 right-0 h-[8px] w-[8px] rounded-full border-[2px] border-white bg-[#12B76A]" />
                     </div>
 
                     <div className="min-w-0">
                       <div className="truncate !text-[12px] !font-semibold !leading-[13px] !text-[#101828]">
-                        Admin User
+                        {role === "ministry" ? "National Overseer" : role === "state" ? "Chief Secretary" : role === "district" ? "District Collector" : selectedMp.split(" (")[0]}
                       </div>
 
-                      <div className="mt-[2px] truncate !text-[11px] !font-medium !text-[#98A2B3]">
-                        admin@sahaya.gov.in
+                      <div className="mt-[2px] truncate !text-[10px] !font-medium !text-blue-600">
+                        {roleMeta.authority}
                       </div>
                     </div>
                   </div>
@@ -1146,9 +1289,12 @@ export default function TopBar() {
         <div className="absolute bottom-[15px] left-[22px] right-[22px] flex items-end justify-between gap-[24px]">
 
           <div className="min-w-0">
-            <h1 className="flex items-center gap-[5px] !text-[19px] !font-semibold !leading-[24px] tracking-[-0.02em] !text-[#101828]">
+            <h1 className="flex items-center gap-[6px] !text-[19px] !font-semibold !leading-[24px] tracking-[-0.02em] !text-[#101828]">
               <span>
-                Good morning, Admin
+                {role === "ministry" && "Good morning, Director General"}
+                {role === "state" && `Good morning, Chief Secretary · ${selectedState}`}
+                {role === "district" && `Good morning, District Magistrate · ${selectedDistrict}`}
+                {role === "mp" && `Good morning, Hon'ble MP · ${selectedMp.split(" (")[0]}`}
               </span>
 
               <span className="!text-[16px] !leading-none">
@@ -1157,9 +1303,10 @@ export default function TopBar() {
             </h1>
 
             <p className="mt-[3px] truncate !text-[9px] !font-medium !leading-[13px] !text-[#667085]">
-              Monitor MPLADS implementation,
-              fund utilization and emerging
-              project risks across India.
+              {role === "ministry" && "Pan-India sovereign oversight, statutory compliance & national anomaly tracking."}
+              {role === "state" && `State-wise outlay, inter-district arbitration & comparative benchmarks across ${selectedState}.`}
+              {role === "district" && `Ground-level execution, SLA alerts & milestone inspections for ${selectedDistrict} Collectorate.`}
+              {role === "mp" && `₹25 Cr constituency entitlement, citizen grievance resolution & works status in ${selectedMp}.`}
             </p>
           </div>
 
