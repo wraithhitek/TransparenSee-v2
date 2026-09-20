@@ -286,9 +286,7 @@ export default function TopBar() {
       ? selectedRegion
       : role === "state"
       ? selectedState
-      : role === "district"
-      ? selectedDistrict
-      : "MP Works";
+      : selectedDistrict || "Constituency";
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -1306,7 +1304,7 @@ export default function TopBar() {
               {role === "ministry" && "Pan-India sovereign oversight, statutory compliance & national anomaly tracking."}
               {role === "state" && `State-wise outlay, inter-district arbitration & comparative benchmarks across ${selectedState}.`}
               {role === "district" && `Ground-level execution, SLA alerts & milestone inspections for ${selectedDistrict} Collectorate.`}
-              {role === "mp" && `₹25 Cr constituency entitlement, citizen grievance resolution & works status in ${selectedMp}.`}
+              {role === "mp" && `₹25 Cr constituency entitlement, citizen grievance resolution & works status in ${selectedDistrict} (${selectedState}) · ${selectedMp}.`}
             </p>
           </div>
 

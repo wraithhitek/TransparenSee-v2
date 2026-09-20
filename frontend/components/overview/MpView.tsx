@@ -318,14 +318,14 @@ export function MpView() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-[20px] sm:text-[22px] font-bold leading-tight tracking-tight text-slate-900">
-              Constituency Dashboard — {selectedMp}
+              Constituency Dashboard — {selectedMp} ({selectedDistrict}, {selectedState})
             </h1>
             <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-bold text-amber-800">
               18th Lok Sabha
             </span>
           </div>
           <p className="mt-0.5 text-xs text-slate-500">
-            First-person accountability: <strong className="text-amber-900">₹{entitlementUsedCr} Cr deployed across {totalRecommendedCount} works</strong> in your constituency · Serving an estimated 4.2 Lakh citizen beneficiaries
+            First-person accountability: <strong className="text-amber-900">₹{entitlementUsedCr} Cr deployed across {totalRecommendedCount} works</strong> in your constituency ({selectedDistrict}) · Serving an estimated 4.2 Lakh citizen beneficiaries
           </p>
         </div>
 

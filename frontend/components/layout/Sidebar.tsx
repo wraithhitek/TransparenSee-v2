@@ -113,29 +113,16 @@ function NavigationSection({
   );
 }
 
-// Inline TransparenSee logo SVG (shield with eye/transparency motif)
-function TransparenSeeLogo({ size = 28 }: { size?: number }) {
+// Official State Emblem of India (Lion Capital of Ashoka)
+function EmblemOfIndia({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Shield background */}
-      <path d="M20 3L5 9V21C5 29.5 12 36.5 20 39C28 36.5 35 29.5 35 21V9L20 3Z"
-        fill="url(#shieldGrad)" stroke="white" strokeWidth="0.5" strokeOpacity="0.3" />
-      {/* Eye */}
-      <ellipse cx="20" cy="21" rx="8" ry="5.5" fill="white" fillOpacity="0.18" />
-      <path d="M12 21C14 16.5 17 14 20 14C23 14 26 16.5 28 21C26 25.5 23 28 20 28C17 28 14 25.5 12 21Z"
-        stroke="white" strokeWidth="1.5" fill="none" />
-      {/* Pupil */}
-      <circle cx="20" cy="21" r="3.5" fill="white" fillOpacity="0.9" />
-      <circle cx="20" cy="21" r="2" fill="url(#shieldGrad)" />
-      {/* Highlight */}
-      <circle cx="21.5" cy="19.5" r="0.8" fill="white" fillOpacity="0.8" />
-      <defs>
-        <linearGradient id="shieldGrad" x1="5" y1="3" x2="35" y2="39" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#3b82f6" />
-          <stop offset="100%" stopColor="#1d4ed8" />
-        </linearGradient>
-      </defs>
-    </svg>
+    <img
+      src="/emblem-of-india.svg"
+      alt="State Emblem of India"
+      width={size}
+      height={size}
+      className="h-full w-full object-contain filter brightness-0 invert drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
+    />
   );
 }
 
@@ -172,9 +159,9 @@ export default function Sidebar() {
           {/* Logo area */}
           <div className={`shrink-0 ${collapsed ? "px-2 pb-3 pt-4" : "px-5 pb-4 pt-5"}`}>
             <Link href="/" className="group flex items-center gap-0">
-              <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#2f72ed] to-[#174fc7] shadow-[0_5px_16px_rgba(37,99,235,0.24)] transition-all duration-200 ${collapsed ? "size-[42px] mx-auto" : "size-[38px]"}`}>
+              <div className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#2f72ed] to-[#174fc7] border border-blue-400/30 p-1.5 shadow-[0_5px_16px_rgba(37,99,235,0.24)] transition-all duration-200 ${collapsed ? "size-[44px] mx-auto" : "size-[40px]"}`}>
                 <div className="absolute inset-0 bg-white/[0.04]" />
-                <TransparenSeeLogo size={collapsed ? 26 : 24} />
+                <EmblemOfIndia size={collapsed ? 30 : 26} />
               </div>
 
               {!collapsed && (

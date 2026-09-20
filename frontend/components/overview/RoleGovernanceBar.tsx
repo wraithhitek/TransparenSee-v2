@@ -32,6 +32,7 @@ export function RoleGovernanceBar() {
     setSelectedMp,
     roleMeta,
     availableDistricts,
+    availableMps,
   } = useRole();
 
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
@@ -286,39 +287,70 @@ export function RoleGovernanceBar() {
             </div>
           )}
 
-          {/* MP Scope Selector */}
+          {/* MP Scope Selector with Dynamic State & Constituency */}
           {role === "mp" && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* State Dropdown for MP */}
+              <select
+                value={selectedState}
+                onChange={(e) => {
+                  setSelectedState(e.target.value);
+                }}
+                className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 shadow-2xs hover:bg-amber-50/50 focus:outline-none cursor-pointer"
+              >
+                {DEFAULT_STATES.map((st) => (
+                  <option key={st} value={st}>
+                    State: {st}
+                  </option>
+                ))}
+              </select>
+
+              {/* Constituency Dropdown for MP */}
+              <select
+                value={selectedDistrict}
+                onChange={(e) => {
+                  setSelectedDistrict(e.target.value);
+                }}
+                className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 shadow-2xs hover:bg-amber-50/50 focus:outline-none cursor-pointer"
+              >
+                {availableDistricts.map((dst) => (
+                  <option key={dst} value={dst}>
+                    Constituency: {dst}
+                  </option>
+                ))}
+              </select>
+
+              {/* Dynamic Hon'ble MP Indicator & Picker */}
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setMpDropdownOpen(!mpDropdownOpen)}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2.5 py-1 text-xs font-semibold text-amber-900 shadow-2xs hover:bg-amber-50/50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-white px-2.5 py-1 text-xs font-semibold text-amber-900 shadow-2xs hover:bg-amber-50/50 cursor-pointer"
                 >
                   <UserCheck size={13} className="text-amber-600" />
-                  <span>Hon&apos;ble MP: {selectedMp}</span>
+                  <span>Hon&apos;ble MP: <strong className="text-amber-800">{selectedMp}</strong></span>
                   <ChevronDown size={12} className="text-slate-400" />
                 </button>
 
                 {mpDropdownOpen && (
                   <div className="absolute left-0 top-[32px] z-50 max-h-[280px] w-[260px] overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl">
                     <div className="px-2 py-1 text-[10px] font-bold uppercase text-slate-400">
-                      Select Member of Parliament
+                      MPs for {selectedState}
                     </div>
-                    {POPULAR_MPS.map((m) => {
-                      const mpLabel = `${m.name} (${m.constituency})`;
+                    {availableMps.map((m) => {
+                      const isSelected = selectedMp === m.name;
                       return (
                         <button
-                          key={mpLabel}
+                          key={`${m.name}-${m.constituency}`}
                           type="button"
                           onClick={() => {
-                            setSelectedMp(mpLabel);
-                            setSelectedState(m.state);
+                            setSelectedMp(m.name);
                             setSelectedDistrict(m.constituency);
+                            setSelectedState(m.state);
                             setMpDropdownOpen(false);
                           }}
                           className={`flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs ${
-                            selectedMp === mpLabel
+                            isSelected
                               ? "bg-amber-50 font-bold text-amber-900"
                               : "text-slate-700 hover:bg-slate-50"
                           }`}
@@ -329,7 +361,7 @@ export function RoleGovernanceBar() {
                               {m.constituency}, {m.state} ({m.house})
                             </div>
                           </div>
-                          {selectedMp === mpLabel && <Check size={12} className="text-amber-600" />}
+                          {isSelected && <Check size={12} className="text-amber-600" />}
                         </button>
                       );
                     })}
@@ -338,7 +370,7 @@ export function RoleGovernanceBar() {
               </div>
 
               <span className="hidden sm:inline-block text-[11px] font-medium text-slate-500">
-                ₹25 Cr 5-Year Entitlement · Citizen Grievance Portal
+                18th Lok Sabha Parliamentary Scope
               </span>
             </div>
           )}

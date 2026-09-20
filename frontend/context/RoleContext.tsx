@@ -103,17 +103,106 @@ export const STATE_DISTRICTS: Record<string, string[]> = {
   "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
 };
 
-export const POPULAR_MPS = [
+export interface MpRecord {
+  name: string;
+  constituency: string;
+  state: string;
+  house: "Lok Sabha" | "Rajya Sabha";
+}
+
+export const POPULAR_MPS: MpRecord[] = [
+  // Uttar Pradesh
   { name: "Narendra Modi", constituency: "Varanasi", state: "Uttar Pradesh", house: "Lok Sabha" },
   { name: "Rajnath Singh", constituency: "Lucknow", state: "Uttar Pradesh", house: "Lok Sabha" },
-  { name: "Supriya Sule", constituency: "Baramati", state: "Maharashtra", house: "Lok Sabha" },
-  { name: "Nitin Gadkari", constituency: "Nagpur", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Ravi Kishan", constituency: "Gorakhpur", state: "Uttar Pradesh", house: "Lok Sabha" },
+  { name: "Pravin Patel", constituency: "Prayagraj", state: "Uttar Pradesh", house: "Lok Sabha" },
+  { name: "Ramesh Awasthi", constituency: "Kanpur Nagar", state: "Uttar Pradesh", house: "Lok Sabha" },
+  { name: "SP Singh Baghel", constituency: "Agra", state: "Uttar Pradesh", house: "Lok Sabha" },
+  { name: "Atul Garg", constituency: "Ghaziabad", state: "Uttar Pradesh", house: "Lok Sabha" },
+  { name: "Awadhesh Prasad", constituency: "Ayodhya", state: "Uttar Pradesh", house: "Lok Sabha" },
+
+  // Maharashtra
   { name: "Murlidhar Mohol", constituency: "Pune", state: "Maharashtra", house: "Lok Sabha" },
-  { name: "Ravi Shankar Prasad", constituency: "Patna Sahib", state: "Bihar", house: "Lok Sabha" },
+  { name: "Arvind Sawant", constituency: "Mumbai South", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Nitin Gadkari", constituency: "Nagpur", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Naresh Mhaske", constituency: "Thane", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Rajabhau Waje", constituency: "Nashik", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Sandipan Bhumre", constituency: "Aurangabad", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Shahu Chhatrapati", constituency: "Kolhapur", state: "Maharashtra", house: "Lok Sabha" },
+  { name: "Supriya Sule", constituency: "Baramati", state: "Maharashtra", house: "Lok Sabha" },
+
+  // Bihar
+  { name: "Ravi Shankar Prasad", constituency: "Patna", state: "Bihar", house: "Lok Sabha" },
+  { name: "Jitan Ram Manjhi", constituency: "Gaya", state: "Bihar", house: "Lok Sabha" },
+  { name: "Raj Bhushan Choudhary", constituency: "Muzaffarpur", state: "Bihar", house: "Lok Sabha" },
+  { name: "Ajay Kumar Mandal", constituency: "Bhagalpur", state: "Bihar", house: "Lok Sabha" },
+  { name: "Gopal Jee Thakur", constituency: "Darbhanga", state: "Bihar", house: "Lok Sabha" },
+  { name: "Pappu Yadav", constituency: "Purnia", state: "Bihar", house: "Lok Sabha" },
+
+  // Rajasthan
   { name: "Manju Sharma", constituency: "Jaipur", state: "Rajasthan", house: "Lok Sabha" },
-  { name: "Tejasvi Surya", constituency: "Bangalore South", state: "Karnataka", house: "Lok Sabha" },
+  { name: "Gajendra Singh Shekhawat", constituency: "Jodhpur", state: "Rajasthan", house: "Lok Sabha" },
+  { name: "Om Birla", constituency: "Kota", state: "Rajasthan", house: "Lok Sabha" },
+  { name: "Mannalal Rawat", constituency: "Udaipur", state: "Rajasthan", house: "Lok Sabha" },
+  { name: "Arjun Ram Meghwal", constituency: "Bikaner", state: "Rajasthan", house: "Lok Sabha" },
+  { name: "Bhagirath Choudhary", constituency: "Ajmer", state: "Rajasthan", house: "Lok Sabha" },
+
+  // Madhya Pradesh
+  { name: "Alok Sharma", constituency: "Bhopal", state: "Madhya Pradesh", house: "Lok Sabha" },
+  { name: "Shankar Lalwani", constituency: "Indore", state: "Madhya Pradesh", house: "Lok Sabha" },
+  { name: "Bharat Singh Kushwah", constituency: "Gwalior", state: "Madhya Pradesh", house: "Lok Sabha" },
+  { name: "Ashish Dubey", constituency: "Jabalpur", state: "Madhya Pradesh", house: "Lok Sabha" },
+  { name: "Anil Firojiya", constituency: "Ujjain", state: "Madhya Pradesh", house: "Lok Sabha" },
+
+  // West Bengal
+  { name: "Sudip Bandyopadhyay", constituency: "Kolkata", state: "West Bengal", house: "Lok Sabha" },
+  { name: "Prasun Banerjee", constituency: "Howrah", state: "West Bengal", house: "Lok Sabha" },
+  { name: "Sougata Roy", constituency: "North 24 Parganas", state: "West Bengal", house: "Lok Sabha" },
+  { name: "Raju Bista", constituency: "Darjeeling", state: "West Bengal", house: "Lok Sabha" },
+  { name: "Abu Taher Khan", constituency: "Murshidabad", state: "West Bengal", house: "Lok Sabha" },
+
+  // Gujarat
+  { name: "Amit Shah", constituency: "Gandhinagar", state: "Gujarat", house: "Lok Sabha" },
+  { name: "Hasmukh Patel", constituency: "Ahmedabad", state: "Gujarat", house: "Lok Sabha" },
+  { name: "Mukesh Dalal", constituency: "Surat", state: "Gujarat", house: "Lok Sabha" },
+  { name: "Hemang Joshi", constituency: "Vadodara", state: "Gujarat", house: "Lok Sabha" },
+  { name: "Parshottam Rupala", constituency: "Rajkot", state: "Gujarat", house: "Lok Sabha" },
+
+  // Karnataka
+  { name: "Tejasvi Surya", constituency: "Bengaluru Urban", state: "Karnataka", house: "Lok Sabha" },
+  { name: "Yaduveer Wadiyar", constituency: "Mysuru", state: "Karnataka", house: "Lok Sabha" },
+  { name: "Pralhad Joshi", constituency: "Dharwad", state: "Karnataka", house: "Lok Sabha" },
+  { name: "Brijesh Chowta", constituency: "Mangaluru", state: "Karnataka", house: "Lok Sabha" },
+  { name: "Jagadish Shettar", constituency: "Belagavi", state: "Karnataka", house: "Lok Sabha" },
+
+  // Tamil Nadu
+  { name: "Dayanidhi Maran", constituency: "Chennai", state: "Tamil Nadu", house: "Lok Sabha" },
+  { name: "Ganapathi Rajkumar", constituency: "Coimbatore", state: "Tamil Nadu", house: "Lok Sabha" },
+  { name: "Su. Venkatesan", constituency: "Madurai", state: "Tamil Nadu", house: "Lok Sabha" },
+  { name: "Durai Vaiko", constituency: "Tiruchirappalli", state: "Tamil Nadu", house: "Lok Sabha" },
+  { name: "TM Selvaganapathy", constituency: "Salem", state: "Tamil Nadu", house: "Lok Sabha" },
   { name: "Kanimozhi Karunanidhi", constituency: "Thoothukkudi", state: "Tamil Nadu", house: "Lok Sabha" },
 ];
+
+export function getMpForStateAndConstituency(state: string, constituency: string): string {
+  const match = POPULAR_MPS.find(
+    (m) =>
+      m.state.toLowerCase() === state.toLowerCase() &&
+      m.constituency.toLowerCase() === constituency.toLowerCase()
+  );
+  if (match) return match.name;
+
+  const stateMatch = POPULAR_MPS.find(
+    (m) => m.state.toLowerCase() === state.toLowerCase()
+  );
+  if (stateMatch) return stateMatch.name;
+
+  return `MP (${constituency})`;
+}
+
+export function getMpsForState(state: string): MpRecord[] {
+  return POPULAR_MPS.filter((m) => m.state.toLowerCase() === state.toLowerCase());
+}
 
 interface RoleContextValue {
   role: RoleType;
@@ -126,6 +215,7 @@ interface RoleContextValue {
   setSelectedMp: (mp: string) => void;
   roleMeta: RoleMeta;
   availableDistricts: string[];
+  availableMps: MpRecord[];
 }
 
 const RoleContext = createContext<RoleContextValue | undefined>(undefined);
@@ -139,7 +229,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<RoleType>("ministry");
   const [selectedState, setSelectedStateState] = useState<string>("Uttar Pradesh");
   const [selectedDistrict, setSelectedDistrictState] = useState<string>("Varanasi");
-  const [selectedMp, setSelectedMpState] = useState<string>("Narendra Modi (Varanasi)");
+  const [selectedMp, setSelectedMpState] = useState<string>("Narendra Modi");
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -153,7 +243,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       const savedDistrict = localStorage.getItem(DISTRICT_STORAGE_KEY);
       if (savedDistrict) setSelectedDistrictState(savedDistrict);
       const savedMp = localStorage.getItem(MP_STORAGE_KEY);
-      if (savedMp) setSelectedMpState(savedMp);
+      if (savedMp) setSelectedMpState(savedMp.split(" (")[0]);
     } catch {
       // Ignore storage errors in restricted contexts
     }
@@ -170,13 +260,19 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   const setSelectedState = (state: string) => {
     setSelectedStateState(state);
-    // Update default district for this state if available
+    // Update default district for this state
     const districts = STATE_DISTRICTS[state] || ["District Headquarters"];
     const firstDistrict = districts[0] || "District Headquarters";
     setSelectedDistrictState(firstDistrict);
+
+    // DYNAMICALLY update MP for this state & district!
+    const matchedMp = getMpForStateAndConstituency(state, firstDistrict);
+    setSelectedMpState(matchedMp);
+
     try {
       localStorage.setItem(STATE_STORAGE_KEY, state);
       localStorage.setItem(DISTRICT_STORAGE_KEY, firstDistrict);
+      localStorage.setItem(MP_STORAGE_KEY, matchedMp);
     } catch {
       // Ignore
     }
@@ -184,23 +280,46 @@ export function RoleProvider({ children }: { children: ReactNode }) {
 
   const setSelectedDistrict = (district: string) => {
     setSelectedDistrictState(district);
+
+    // DYNAMICALLY update MP for this constituency in current state!
+    const matchedMp = getMpForStateAndConstituency(selectedState, district);
+    setSelectedMpState(matchedMp);
+
     try {
       localStorage.setItem(DISTRICT_STORAGE_KEY, district);
+      localStorage.setItem(MP_STORAGE_KEY, matchedMp);
     } catch {
       // Ignore
     }
   };
 
-  const setSelectedMp = (mp: string) => {
-    setSelectedMpState(mp);
-    try {
-      localStorage.setItem(MP_STORAGE_KEY, mp);
-    } catch {
-      // Ignore
+  const setSelectedMp = (mpInput: string) => {
+    const cleanedName = mpInput.includes(" (") ? mpInput.split(" (")[0].trim() : mpInput.trim();
+    const found = POPULAR_MPS.find(
+      (m) =>
+        m.name.toLowerCase() === cleanedName.toLowerCase() ||
+        `${m.name} (${m.constituency})`.toLowerCase() === mpInput.toLowerCase()
+    );
+
+    if (found) {
+      setSelectedMpState(found.name);
+      setSelectedStateState(found.state);
+      setSelectedDistrictState(found.constituency);
+      try {
+        localStorage.setItem(MP_STORAGE_KEY, found.name);
+        localStorage.setItem(STATE_STORAGE_KEY, found.state);
+        localStorage.setItem(DISTRICT_STORAGE_KEY, found.constituency);
+      } catch {}
+    } else {
+      setSelectedMpState(cleanedName);
+      try {
+        localStorage.setItem(MP_STORAGE_KEY, cleanedName);
+      } catch {}
     }
   };
 
   const availableDistricts = STATE_DISTRICTS[selectedState] || ["District Headquarters", "Central Block", "North Division", "South Division"];
+  const availableMps = getMpsForState(selectedState);
 
   return (
     <RoleContext.Provider
@@ -215,6 +334,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         setSelectedMp,
         roleMeta: ROLE_DEFINITIONS[role],
         availableDistricts,
+        availableMps,
       }}
     >
       {children}
