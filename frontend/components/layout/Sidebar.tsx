@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AlertTriangle,
   BellRing,
@@ -154,46 +154,82 @@ function EmblemOfIndia({ size = 28 }: { size?: number }) {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Persist collapse state
+  // Initialize collapse state (defaulting to true so sidebar stays minimized until hovered)
   useEffect(() => {
-    // Clear stale legacy collapse key to ensure default is expanded
     if (typeof window !== "undefined" && localStorage.getItem("sidebar-collapsed")) {
       localStorage.removeItem("sidebar-collapsed");
     }
-    const stored = localStorage.getItem("sidebar-collapsed-v2");
-    if (stored === "true") setCollapsed(true);
-    else setCollapsed(false);
+    const stored = localStorage.getItem("sidebar-auto-hover-v1");
+    if (stored === null) {
+      setCollapsed(true);
+      localStorage.setItem("sidebar-collapsed-v2", "true");
+      localStorage.setItem("sidebar-auto-hover-v1", "true");
+    } else {
+      const isCol = localStorage.getItem("sidebar-collapsed-v2");
+      setCollapsed(isCol !== "false");
+    }
   }, []);
+
+  const handleMouseEnter = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setIsHovered(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setIsHovered(false);
+    }, 120);
+  };
 
   const toggle = () => {
     setCollapsed((c) => {
-      localStorage.setItem("sidebar-collapsed-v2", String(!c));
-      return !c;
+      const next = !c;
+      localStorage.setItem("sidebar-collapsed-v2", String(next));
+      localStorage.setItem("sidebar-auto-hover-v1", "true");
+      return next;
     });
   };
 
-  const w = collapsed ? "w-[64px]" : "w-[260px]";
+  // Expanded if manually pinned open OR if cursor is hovering over it
+  const isExpanded = !collapsed || isHovered;
+  const w = isExpanded ? "w-[260px]" : "w-[64px]";
 
   return (
-    <>
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="fixed inset-y-0 left-0 z-50 pointer-events-none"
+    >
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 ${w} bg-[#0b2743] text-white transition-all duration-200 ease-out`}>
+      <aside
+        className={`pointer-events-auto h-full ${w} bg-[#0b2743] text-white transition-all duration-200 ease-out ${
+          isExpanded ? "shadow-[6px_0_32px_rgba(0,0,0,0.38)]" : ""
+        }`}
+      >
         <div className="flex h-full flex-col overflow-hidden">
 
           {/* Logo area */}
-          <div className={`shrink-0 ${collapsed ? "px-2 pb-3 pt-4" : "px-5 pb-4 pt-5"}`}>
+          <div className={`shrink-0 ${!isExpanded ? "px-2 pb-3 pt-4" : "px-5 pb-4 pt-5"}`}>
             <Link href="/" className="group flex items-center gap-0">
               <div
                 title="State Emblem of India · TransparenSee"
-                className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0b2743] border border-amber-400/50 p-1.5 shadow-[0_4px_16px_rgba(30,58,138,0.35)] transition-all duration-200 ${collapsed ? "size-[44px] mx-auto" : "size-[40px]"}`}
+                className={`relative flex shrink-0 items-center justify-center overflow-hidden rounded-[10px] bg-gradient-to-br from-[#1e3a8a] via-[#1d4ed8] to-[#0b2743] border border-amber-400/50 p-1.5 shadow-[0_4px_16px_rgba(30,58,138,0.35)] transition-all duration-200 ${!isExpanded ? "size-[44px] mx-auto" : "size-[40px]"}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-amber-400/10 pointer-events-none" />
-                <EmblemOfIndia size={collapsed ? 30 : 26} />
+                <EmblemOfIndia size={!isExpanded ? 30 : 26} />
               </div>
 
-              {!collapsed && (
+              {isExpanded && (
                 <div className="ml-3 min-w-0">
                   <div className="truncate text-[14px] font-bold tracking-[-0.2px] text-white">
                     TransparenSee
@@ -207,33 +243,33 @@ export default function Sidebar() {
           </div>
 
           {/* Overview link */}
-          <div className={`shrink-0 ${collapsed ? "px-1.5" : "px-2"}`}>
+          <div className={`shrink-0 ${!isExpanded ? "px-1.5" : "px-2"}`}>
             <Link
               href="/"
-              title={collapsed ? "Overview" : undefined}
+              title={!isExpanded ? "Overview" : undefined}
               className={[
                 "group relative flex h-[40px] items-center rounded-[8px] transition-all duration-150",
-                collapsed ? "justify-center" : "px-3.5",
+                !isExpanded ? "justify-center" : "px-3.5",
                 "bg-[#2563eb] text-white shadow-[0_5px_18px_rgba(37,99,235,0.18)] hover:bg-[#2d6bea]",
               ].join(" ")}
             >
               <span className="flex size-7 items-center justify-center rounded-[6px] bg-white/10">
                 <LayoutDashboard size={15} strokeWidth={2} />
               </span>
-              {!collapsed && <span className="ml-2.5 text-[11px] font-semibold">Overview</span>}
-              {!collapsed && <span className="ml-auto block size-1.5 rounded-full bg-white/80" />}
+              {isExpanded && <span className="ml-2.5 text-[11px] font-semibold">Overview</span>}
+              {isExpanded && <span className="ml-auto block size-1.5 rounded-full bg-white/80" />}
             </Link>
           </div>
 
           {/* Nav sections */}
           <div className="sidebar-scroll mt-4 min-h-0 flex-1 overflow-y-auto px-0">
-            <NavigationSection title="Monitoring"  items={monitoringItems}  pathname={pathname} collapsed={collapsed} />
-            <NavigationSection title="Analytics"   items={analyticsItems}   pathname={pathname} collapsed={collapsed} />
-            <NavigationSection title="Management"  items={managementItems}  pathname={pathname} collapsed={collapsed} />
+            <NavigationSection title="Monitoring"  items={monitoringItems}  pathname={pathname} collapsed={!isExpanded} />
+            <NavigationSection title="Analytics"   items={analyticsItems}   pathname={pathname} collapsed={!isExpanded} />
+            <NavigationSection title="Management"  items={managementItems}  pathname={pathname} collapsed={!isExpanded} />
           </div>
 
           {/* Footer */}
-          {!collapsed && (
+          {isExpanded && (
             <div className="shrink-0 border-t border-[#193955] px-5 py-3">
               <p className="text-[8px] font-medium text-[#7189a2]">© 2026 TransparenSee</p>
               <p className="mt-0.5 text-[8px] text-[#526f8b]">Ministry of Statistics & Programme Implementation</p>
@@ -250,11 +286,12 @@ export default function Sidebar() {
       {/* Collapse toggle button — floats at edge of sidebar */}
       <button
         onClick={toggle}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        className={`fixed top-[76px] z-[60] flex h-6 w-6 items-center justify-center rounded-full border border-[#2a4a66] bg-[#0b2743] text-[#7892ad] shadow-md transition-all duration-200 hover:bg-[#1a3857] hover:text-white ${collapsed ? "left-[52px]" : "left-[248px]"}`}
+        aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+        title={isExpanded ? (collapsed ? "Pin sidebar open" : "Collapse sidebar") : "Expand sidebar"}
+        className={`pointer-events-auto fixed top-[76px] z-[60] flex h-6 w-6 items-center justify-center rounded-full border border-[#2a4a66] bg-[#0b2743] text-[#7892ad] shadow-md transition-all duration-200 hover:bg-[#1a3857] hover:text-white ${isExpanded ? "left-[248px]" : "left-[52px]"}`}
       >
-        {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+        {isExpanded ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
       </button>
-    </>
+    </div>
   );
 }

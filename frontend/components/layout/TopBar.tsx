@@ -288,12 +288,12 @@ export default function TopBar() {
       ? selectedState
       : selectedDistrict || "Constituency";
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   useEffect(() => {
     const checkCollapsed = () => {
       const v = typeof window !== "undefined" ? localStorage.getItem("sidebar-collapsed-v2") : null;
-      setSidebarCollapsed(v === "true");
+      setSidebarCollapsed(v !== "false");
     };
     checkCollapsed();
     window.addEventListener("storage", checkCollapsed);
