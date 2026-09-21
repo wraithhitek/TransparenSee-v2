@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import GreetingBanner from "./GreetingBanner";
 
 export default function MainWrapper({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -30,10 +31,11 @@ export default function MainWrapper({ children }: { children: React.ReactNode })
 
   return (
     <main
-      className="min-h-screen pt-[112px] transition-all duration-200 ease-out"
+      className="min-h-screen pt-[54px] transition-all duration-200 ease-out"
       style={{ marginLeft: collapsed ? "64px" : "260px" }}
     >
-      <div className="mx-auto w-full max-w-[1700px] px-4 py-5 sm:px-6 sm:py-6 lg:px-8">
+      <div className="mx-auto w-full max-w-[1700px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8">
+        <GreetingBanner />
         {children}
       </div>
     </main>
