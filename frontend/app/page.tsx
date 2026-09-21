@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useState, useEffect, useRef, type ReactNode } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
   ChevronRight,
   CircleCheck,
   FileSearch,
+  Layers,
   MapPin,
   ShieldAlert,
   Sparkles,
@@ -208,10 +210,13 @@ export default function OverviewPage() {
             </div>
           </div>
 
-          <button className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-slate-50 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30">
+          <Link
+            href="/queue"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 shadow-sm transition-all duration-150 hover:-translate-y-px hover:bg-slate-50 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+          >
             View Investigation Queue
             <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          </Link>
         </section>
 
         {/* ================= MAIN DASHBOARD GRID ================= */}
@@ -291,6 +296,7 @@ export default function OverviewPage() {
             <Panel
               title="Key Insights (AI Generated)"
               action="View All"
+              actionHref="/risk-insights"
               className="mt-3 h-[350px] animate-dashboard-in"
             >
               <div className="space-y-3">
@@ -332,6 +338,7 @@ export default function OverviewPage() {
             <Panel
               title="Top 5 High Risk Projects"
               action="View All"
+              actionHref="/works"
               className="h-[450px] animate-dashboard-in"
             >
               <div className="h-[375px] overflow-auto">
@@ -348,7 +355,9 @@ export default function OverviewPage() {
                     {data.topProjects.map((work) => (
                       <tr key={work.id} className="border-b border-slate-100 transition-colors duration-150 hover:bg-slate-50">
                         <td className="px-1 py-3.5 pr-2">
-                          <span className="block truncate text-[13px] font-semibold text-slate-700">{getWorkProjectName(work)}</span>
+                          <Link href={`/work/${work.id}`} className="block truncate text-[13px] font-semibold text-slate-700 hover:text-blue-600">
+                            {getWorkProjectName(work)}
+                          </Link>
                         </td>
                         <td className="truncate px-1 py-3.5 text-[12px] text-slate-500">{work.district ?? "—"}</td>
                         <td className={`px-1 py-3.5 text-center text-[13px] font-bold ${work.riskScore >= 81 ? "text-red-500" : "text-orange-500"}`}>
@@ -365,6 +374,7 @@ export default function OverviewPage() {
             <Panel
               title="AI Investigation Queue"
               action="View Queue"
+              actionHref="/queue"
               className="mt-3 h-[350px] animate-dashboard-in"
             >
               <div className="overflow-auto">
@@ -372,67 +382,104 @@ export default function OverviewPage() {
                   <span>#</span><span>Project</span><span className="text-right">Risk</span><span className="text-right">Exposure</span><span />
                 </div>
                 {data.topProjects.map((work, index) => (
-                  <div key={work.id} className="group grid grid-cols-[26px_minmax(0,1fr)_48px_72px_14px] items-center gap-2 border-b border-slate-100 px-1 py-3 transition-all duration-150 hover:bg-slate-50">
+                  <Link
+                    key={work.id}
+                    href="/queue"
+                    className="group grid grid-cols-[26px_minmax(0,1fr)_48px_72px_14px] items-center gap-2 border-b border-slate-100 px-1 py-3 transition-all duration-150 hover:bg-slate-50"
+                  >
                     <span className={`grid h-6 w-6 place-items-center rounded-md text-[9px] font-bold text-white ${work.riskScore >= 81 ? "bg-red-600" : "bg-orange-500"}`}>
                       {index + 1}
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-[11px] font-semibold text-slate-700">{getWorkProjectName(work)}</p>
+                      <p className="truncate text-[11px] font-semibold text-slate-700 group-hover:text-blue-600">{getWorkProjectName(work)}</p>
                       <p className="truncate text-[9px] text-slate-400">{work.district ?? "—"}</p>
                     </div>
                     <span className="text-right text-[11px] font-bold text-red-500">{work.riskScore}%</span>
                     <span className="text-right text-[10px] font-medium text-slate-500">{formatCr(work.sanctionedAmount ?? 0)}</span>
-                    <ChevronRight className="h-3.5 w-3.5 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-300 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-blue-600" />
+                  </Link>
                 ))}
               </div>
             </Panel>
           </div>
         </section>
 
-        {/* ================= AI FEATURES ================= */}
-        {/* FOOTER */}
+        {/* ================= AI PRODUCTION PIPELINE FOOTER ================= */}
+        <div className="mt-4 w-full">
+          <section className="w-full overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-xs">
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-2 text-[11px]">
+              <div className="flex items-center gap-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-100 text-blue-700">
+                  <Sparkles className="h-3 w-3" />
+                </div>
+                <span className="font-semibold text-slate-700">
+                  AI &amp; Machine Learning Production Pipeline
+                </span>
+                <span className="hidden text-slate-300 sm:inline">·</span>
+                <span className="hidden text-slate-500 sm:inline">
+                  6 Autonomous Neural &amp; Statistical Engines Active
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1.5 font-medium text-emerald-600">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                  </span>
+                  Optimal
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-500">
+                  Data Quality: <span className="font-semibold text-slate-700">{kpis?.data_quality_pct?.toFixed(1) ?? "96.1"}%</span>
+                </span>
+              </div>
+            </div>
 
-        <footer className="flex flex-col gap-1 pt-3 text-[10px] text-slate-400 sm:flex-row sm:items-center sm:justify-between">
+            <div className="grid w-full grid-cols-2 divide-y divide-slate-100 sm:grid-cols-3 sm:divide-y-0 sm:divide-x lg:grid-cols-6">
+              <Feature
+                icon={<Sparkles />}
+                iconBg="bg-blue-50 text-blue-600"
+                title="AI Core Engine"
+                subtitle="Multi-Task Learning"
+              />
 
-          <section className="grid overflow-hidden rounded-lg border border-slate-200/70 bg-white sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-            <Feature
-              icon={<Sparkles />}
-              title="AI Models Powering Insights"
-              subtitle="6 AI Models"
-            />
+              <Feature
+                icon={<FileSearch />}
+                iconBg="bg-rose-50 text-rose-600"
+                title="Fraud Detection"
+                subtitle="Graph Neural Net"
+              />
 
-            <Feature
-              icon={<FileSearch />}
-              title="Fraud Detection"
-              subtitle="Graph Neural Networks"
-            />
+              <Feature
+                icon={<ShieldAlert />}
+                iconBg="bg-amber-50 text-amber-600"
+                title="Anomaly Detection"
+                subtitle="Isolation Forest"
+              />
 
-            <Feature
-              icon={<ShieldAlert />}
-              title="Anomaly Detection"
-              subtitle="Isolation Forest"
-            />
+              <Feature
+                icon={<MapPin />}
+                iconBg="bg-emerald-50 text-emerald-600"
+                title="Vision Verification"
+                subtitle="Computer Vision"
+              />
 
-            <Feature
-              icon={<MapPin />}
-              title="Vision Verification"
-              subtitle="Computer Vision"
-            />
+              <Feature
+                icon={<CircleCheck />}
+                iconBg="bg-indigo-50 text-indigo-600"
+                title="Delay Prediction"
+                subtitle="Time Series Forecast"
+              />
 
-            <Feature
-              icon={<CircleCheck />}
-              title="Delay Prediction"
-              subtitle="Time Series Forecasting"
-            />
-
-            <Feature
-              icon={<ShieldAlert />}
-              title="Explainable AI"
-              subtitle="SHAP Values"
-            />
+              <Feature
+                icon={<Layers />}
+                iconBg="bg-purple-50 text-purple-600"
+                title="Explainable AI"
+                subtitle="SHAP Values"
+              />
+            </div>
           </section>
-        </footer>
+        </div>
         </>
       )}
 
@@ -527,12 +574,16 @@ function Panel({
   title,
   subtitle,
   action,
+  actionHref,
+  onAction,
   className = "",
   children,
 }: {
   title: string;
   subtitle?: string;
   action?: string;
+  actionHref?: string;
+  onAction?: () => void;
   className?: string;
   children: ReactNode;
 }) {
@@ -554,9 +605,21 @@ function Panel({
         </div>
 
         {action && (
-          <button className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30">
-            {action}
-          </button>
+          actionHref ? (
+            <Link
+              href={actionHref}
+              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+            >
+              {action}
+            </Link>
+          ) : (
+            <button
+              onClick={onAction}
+              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+            >
+              {action}
+            </button>
+          )
         )}
       </div>
 
@@ -968,21 +1031,23 @@ function Insight({
 
 function Feature({
   icon,
+  iconBg = "bg-blue-50 text-blue-600",
   title,
   subtitle,
 }: {
   icon: ReactNode;
+  iconBg?: string;
   title: string;
   subtitle: string;
 }) {
   return (
-    <div className="flex min-h-[64px] items-center gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0 sm:[&:nth-child(odd)]:border-r lg:[&:nth-child(3n)]:border-r-0 xl:border-b-0 xl:border-r xl:last:border-r-0">
-      <span className="text-slate-400 [&>svg]:h-4 [&>svg]:w-4">
+    <div className="flex items-center gap-3 p-3 transition-colors duration-150 hover:bg-slate-50/80">
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${iconBg} [&>svg]:h-4 [&>svg]:w-4`}>
         {icon}
       </span>
 
-      <div className="min-w-0">
-        <p className="truncate text-[11px] font-semibold text-slate-600">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[11px] font-semibold text-slate-700">
           {title}
         </p>
 
