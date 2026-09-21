@@ -1113,10 +1113,30 @@ const STATE_META: Record<string, { name: string; defaultRisk: number; works: num
   "IN-LD": { name: "Lakshadweep", defaultRisk: 20, works: 110, highRisk: 8, valueCr: 5.5 },
 };
 
-function getRiskTier(risk: number): "high" | "medium" | "low" | "normal" {
-  if (risk >= 60) return "high";
-  if (risk >= 45) return "medium";
-  if (risk >= 30) return "low";
+function getRiskTier(
+  meanRisk: number,
+  highRiskCount: number = 0,
+  worksCount: number = 0
+): "high" | "medium" | "low" | "normal" {
+  if (highRiskCount === 0) return "normal";
+  const highRiskPct = worksCount > 0 ? (highRiskCount / worksCount) * 100 : 0;
+
+  // High Risk (Red): Substantial volume of high-risk projects (>= 500) OR high concentration (>= 10%) OR high mean risk
+  if (highRiskCount >= 500 || (highRiskPct >= 10 && worksCount >= 50) || meanRisk >= 50) {
+    return "high";
+  }
+
+  // Medium Risk (Orange): Moderate volume of high-risk projects (>= 150) OR noticeable concentration (>= 5%) OR medium mean risk
+  if (highRiskCount >= 150 || (highRiskPct >= 5 && worksCount >= 50) || meanRisk >= 35) {
+    return "medium";
+  }
+
+  // Low Risk (Amber): Flagged works present with at least 5 high-risk works or >= 2% ratio
+  if (highRiskCount >= 20 || (highRiskPct >= 2 && highRiskCount >= 5)) {
+    return "low";
+  }
+
+  // Normal (Emerald Green): Minimal or zero high-risk works
   return "normal";
 }
 
@@ -1151,12 +1171,16 @@ function IndiaMap({
     const map: Record<string, StateStats> = {};
 
     Object.entries(STATE_META).forEach(([id, meta]) => {
-      const live = liveMap.get(meta.name.toLowerCase());
+      const live =
+        liveMap.get(meta.name.toLowerCase()) ||
+        (meta.name.includes("Dadra") || meta.name.includes("Daman")
+          ? liveMap.get("the dadra and nagar haveli and daman and diu")
+          : undefined);
       const meanRisk = live?.mean_risk ?? meta.defaultRisk;
       const worksCount = live?.works ?? meta.works;
       const highRiskCount = live?.high_risk ?? meta.highRisk;
       const exposure = live ? live.work_value : meta.valueCr * 10_000_000;
-      const tier = getRiskTier(meanRisk);
+      const tier = getRiskTier(meanRisk, highRiskCount, worksCount);
       const color = getTierColor(tier);
 
       map[id] = {
