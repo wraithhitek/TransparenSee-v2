@@ -608,16 +608,18 @@ function Panel({
           actionHref ? (
             <Link
               href={actionHref}
-              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+              style={{ color: "#ffffff" }}
+              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium !text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
             >
-              {action}
+              <span className="!text-white text-white">{action}</span>
             </Link>
           ) : (
             <button
               onClick={onAction}
-              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
+              style={{ color: "#ffffff" }}
+              className="shrink-0 rounded-md bg-blue-600 px-4 py-1 text-[10px] font-medium !text-white transition-all duration-150 hover:-translate-y-px hover:bg-blue-700 active:translate-y-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
             >
-              {action}
+              <span className="!text-white text-white">{action}</span>
             </button>
           )
         )}
