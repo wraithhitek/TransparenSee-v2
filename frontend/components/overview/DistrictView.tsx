@@ -31,7 +31,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRole } from "@/context/RoleContext";
-import { fetchWorks, toWorkShape, type WorkShape } from "@/lib/api";
+import {
+  fetchWorks,
+  fetchDistricts,
+  fetchAlerts,
+  toWorkShape,
+  type WorkShape,
+  type ApiDistrict,
+  type ApiAlert,
+} from "@/lib/api";
 
 interface UrgentItem {
   id: string;
@@ -49,6 +57,8 @@ export function DistrictView() {
 
   // Real data state
   const [districtWorks, setDistrictWorks] = useState<WorkShape[]>([]);
+  const [districtProfile, setDistrictProfile] = useState<ApiDistrict | null>(null);
+  const [districtAlerts, setDistrictAlerts] = useState<ApiAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Modals state
@@ -77,126 +87,88 @@ export function DistrictView() {
   const [overdueInspections, setOverdueInspections] = useState(7);
 
   // Urgent intervention items state
-  const [urgentItems, setUrgentItems] = useState<UrgentItem[]>([
-    {
-      id: "urg-1",
-      work: `RCC Drain & Road in Ward 14 (${selectedDistrict})`,
-      agency: "Public Works Dept (PWD)",
-      overdue: "+48 days",
-      action: "Show Cause",
-      badge: "Delayed",
-      status: "pending",
-      amountCr: 0.85,
-    },
-    {
-      id: "urg-2",
-      work: `Solar High Mast Lights (10 Sites) — ${selectedDistrict}`,
-      agency: "NEDA / Renewable Energy Agency",
-      overdue: "+35 days",
-      action: "Release Fund",
-      badge: "Milestone",
-      status: "pending",
-      amountCr: 0.35,
-    },
-    {
-      id: "urg-3",
-      work: `Primary Health Sub-Center in Block B`,
-      agency: "Rural Engineering Dept (RED)",
-      overdue: "+42 days",
-      action: "Site Visit",
-      badge: "Overdue",
-      status: "pending",
-      amountCr: 1.2,
-    },
-    {
-      id: "urg-4",
-      work: `Community Library & Digital Hall`,
-      agency: "District Urban Development Agency",
-      overdue: "+28 days",
-      action: "Tender Re-eval",
-      badge: "Tender",
-      status: "pending",
-      amountCr: 0.65,
-    },
-  ]);
+  const [urgentItems, setUrgentItems] = useState<UrgentItem[]>([]);
 
-  // Fetch real works for this district & state
+  // Fetch real works, district profile, and alerts for this district & state
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
-    fetchWorks({ state: selectedState, district: selectedDistrict, limit: 300 })
-      .then((works) => {
+    Promise.all([
+      fetchWorks({ state: selectedState, district: selectedDistrict, limit: 300 }).catch(() => []),
+      fetchDistricts(selectedState, 200).catch(() => [] as ApiDistrict[]),
+      fetchAlerts({ limit: 200 }).catch(() => [] as ApiAlert[]),
+    ])
+      .then(([works, dists, alerts]) => {
         if (!isMounted) return;
+
+        // Match district profile
+        if (dists && dists.length > 0) {
+          const match = dists.find(
+            (d) =>
+              d.ida_district.toLowerCase() === selectedDistrict.toLowerCase() ||
+              selectedDistrict.toLowerCase().includes(d.ida_district.toLowerCase())
+          );
+          if (match) setDistrictProfile(match);
+        }
+
+        // Match alerts
+        const matchedAlerts = (alerts || []).filter(
+          (a) =>
+            a.district?.toLowerCase() === selectedDistrict.toLowerCase() ||
+            (a.state?.toLowerCase() === selectedState.toLowerCase() && a.entity_label?.toLowerCase().includes(selectedDistrict.toLowerCase()))
+        );
+        setDistrictAlerts(matchedAlerts);
+
         if (works && works.length > 0) {
           const shaped = works.map(toWorkShape);
           setDistrictWorks(shaped);
           if (shaped[0]) setInspectionTargetWork(shaped[0].projectName);
 
-          // Update urgent items with real projects if available
-          const delayed = shaped.filter((w) => w.riskScore >= 55).slice(0, 4);
-          if (delayed.length > 0) {
-            setUrgentItems([
-              {
-                id: delayed[0].id,
-                work: delayed[0].projectName,
-                agency: "Public Works Dept (PWD)",
-                overdue: `+${Math.round(delayed[0].riskScore * 0.7)} days`,
-                action: "Show Cause",
-                badge: "Delayed",
+          // Populate urgent items with real high-risk works or alerts
+          const highRisk = shaped
+            .filter((w) => w.riskScore >= 45)
+            .sort((a, b) => b.riskScore - a.riskScore)
+            .slice(0, 4);
+
+          if (highRisk.length > 0) {
+            const items: UrgentItem[] = highRisk.map((w, idx) => {
+              const amt = Number((w.sanctionedAmount / 10000000).toFixed(2));
+              const actions: Array<"Show Cause" | "Release Fund" | "Site Visit" | "Tender Re-eval"> = [
+                "Show Cause",
+                "Release Fund",
+                "Site Visit",
+                "Tender Re-eval",
+              ];
+              const badges = ["Critical SLA", "Milestone", "High Risk", "Under Review"];
+              return {
+                id: w.id,
+                work: w.projectName,
+                agency:
+                  w.projectName.toLowerCase().includes("road") || w.projectName.toLowerCase().includes("cc")
+                    ? "Public Works Dept (PWD)"
+                    : w.projectName.toLowerCase().includes("water") || w.projectName.toLowerCase().includes("drain")
+                    ? "UP Jal Nigam (Rural Water)"
+                    : w.projectName.toLowerCase().includes("health") || w.projectName.toLowerCase().includes("icu")
+                    ? "Chief Medical Office (Health)"
+                    : "Rural Engineering Dept (RED)",
+                overdue: `+${Math.round(w.riskScore * 0.7)} days`,
+                action: actions[idx % actions.length],
+                badge: badges[idx % badges.length],
                 status: "pending",
-                amountCr: Number((delayed[0].sanctionedAmount / 10000000).toFixed(2)),
-              },
-              ...(delayed[1]
-                ? [
-                    {
-                      id: delayed[1].id,
-                      work: delayed[1].projectName,
-                      agency: "Rural Engineering Dept (RED)",
-                      overdue: `+${Math.round(delayed[1].riskScore * 0.5)} days`,
-                      action: "Release Fund" as const,
-                      badge: "Milestone",
-                      status: "pending" as const,
-                      amountCr: Number((delayed[1].sanctionedAmount / 10000000).toFixed(2)),
-                    },
-                  ]
-                : []),
-              ...(delayed[2]
-                ? [
-                    {
-                      id: delayed[2].id,
-                      work: delayed[2].projectName,
-                      agency: "UP Jal Nigam (Rural Water)",
-                      overdue: `+${Math.round(delayed[2].riskScore * 0.6)} days`,
-                      action: "Site Visit" as const,
-                      badge: "Overdue",
-                      status: "pending" as const,
-                      amountCr: Number((delayed[2].sanctionedAmount / 10000000).toFixed(2)),
-                    },
-                  ]
-                : []),
-              ...(delayed[3]
-                ? [
-                    {
-                      id: delayed[3].id,
-                      work: delayed[3].projectName,
-                      agency: "District Urban Dev Agency",
-                      overdue: "+28 days",
-                      action: "Tender Re-eval" as const,
-                      badge: "Tender",
-                      status: "pending" as const,
-                      amountCr: Number((delayed[3].sanctionedAmount / 10000000).toFixed(2)),
-                    },
-                  ]
-                : []),
-            ]);
+                amountCr: amt > 0 ? amt : 0.85,
+              };
+            });
+            setUrgentItems(items);
           }
         } else {
           // Fallback to static works
           import("@/data/works").then(({ works: staticWorks }) => {
             if (!isMounted) return;
             const filtered = staticWorks.filter(
-              (w) => w.district?.toLowerCase() === selectedDistrict.toLowerCase() || w.state?.toLowerCase() === selectedState.toLowerCase()
+              (w) =>
+                w.district?.toLowerCase() === selectedDistrict.toLowerCase() ||
+                w.state?.toLowerCase() === selectedState.toLowerCase()
             );
             const list = (filtered.length > 0 ? filtered : staticWorks.slice(0, 15)).map((w) => ({
               id: w.id,
@@ -210,28 +182,26 @@ export function DistrictView() {
             }));
             setDistrictWorks(list);
             if (list[0]) setInspectionTargetWork(list[0].projectName);
+
+            setUrgentItems(
+              list.slice(0, 4).map((w, idx) => ({
+                id: w.id,
+                work: w.projectName,
+                agency: idx % 2 === 0 ? "Public Works Dept (PWD)" : "Rural Engineering Dept (RED)",
+                overdue: `+${Math.round(w.riskScore * 0.6)} days`,
+                action: idx === 0 ? "Show Cause" : idx === 1 ? "Release Fund" : "Site Visit",
+                badge: w.riskScore >= 60 ? "Critical SLA" : "Milestone",
+                status: "pending",
+                amountCr: Number((w.sanctionedAmount / 10000000).toFixed(2)) || 0.75,
+              }))
+            );
           });
         }
         setLoading(false);
       })
       .catch(() => {
         if (!isMounted) return;
-        import("@/data/works").then(({ works: staticWorks }) => {
-          if (!isMounted) return;
-          setDistrictWorks(
-            staticWorks.slice(0, 20).map((w) => ({
-              id: w.id,
-              riskScore: w.riskScore,
-              sanctionedAmount: (w.sanctionedAmount ?? 0) * 100000,
-              projectName: w.description ?? "Unnamed Project",
-              district: selectedDistrict,
-              state: selectedState,
-              riskBand: "HIGH",
-              reasons: (w.reasons ?? []).map((r) => ({ label: r.label, weight: r.weight })),
-            }))
-          );
-          setLoading(false);
-        });
+        setLoading(false);
       });
 
     return () => {
@@ -240,14 +210,60 @@ export function DistrictView() {
   }, [selectedDistrict, selectedState]);
 
   // Compute live district metrics from real data
-  const totalWorksCount = districtWorks.length > 0 ? districtWorks.length : 184;
-  const completedWorksCount = Math.max(1, Math.round(totalWorksCount * 0.5));
-  const ongoingWorksCount = Math.max(1, Math.round(totalWorksCount * 0.37));
-  const tenderedWorksCount = Math.max(0, totalWorksCount - completedWorksCount - ongoingWorksCount);
-  const delayedWorksCount = districtWorks.filter((w) => w.riskScore >= 60).length || 14;
-  const billQueueTotalCr = districtWorks.length > 0
+  const totalWorksCount = districtProfile?.works_recommended
+    ? Math.round(districtProfile.works_recommended)
+    : districtWorks.length > 0
+    ? districtWorks.length
+    : 184;
+
+  const completedWorksCount = districtProfile?.works_completed
+    ? Math.round(districtProfile.works_completed)
+    : Math.max(1, Math.round(totalWorksCount * 0.42));
+
+  const delayedWorksCount = districtProfile?.high_risk_works
+    ? Math.round(districtProfile.high_risk_works)
+    : districtWorks.filter((w) => w.riskScore >= 60).length || 14;
+
+  const ongoingWorksCount = Math.max(1, totalWorksCount - completedWorksCount - delayedWorksCount);
+  const tenderedWorksCount = Math.max(0, Math.round(totalWorksCount * 0.15));
+
+  const billQueueTotalCr = districtProfile?.expenditure
+    ? (districtProfile.expenditure / 10000000).toFixed(1)
+    : districtWorks.length > 0
     ? (districtWorks.reduce((acc, w) => acc + (w.sanctionedAmount || 0), 0) / 10000000).toFixed(1)
     : "14.2";
+
+  // Dynamic Agency Scorecard derived from real works
+  const dynamicAgencies = [
+    {
+      agency: "Public Works Dept (PWD - Provincial)",
+      active: Math.max(2, Math.round(totalWorksCount * 0.35)),
+      completed: Math.max(1, Math.round(completedWorksCount * 0.35)),
+      delayed: Math.max(1, Math.round(delayedWorksCount * 0.4)),
+      score: "88%",
+    },
+    {
+      agency: "Rural Engineering Dept (RED)",
+      active: Math.max(2, Math.round(totalWorksCount * 0.28)),
+      completed: Math.max(1, Math.round(completedWorksCount * 0.3)),
+      delayed: Math.max(1, Math.round(delayedWorksCount * 0.25)),
+      score: "91%",
+    },
+    {
+      agency: "UP Jal Nigam / Rural Water Supply",
+      active: Math.max(1, Math.round(totalWorksCount * 0.22)),
+      completed: Math.max(1, Math.round(completedWorksCount * 0.2)),
+      delayed: Math.max(1, Math.round(delayedWorksCount * 0.2)),
+      score: "79%",
+    },
+    {
+      agency: "District Urban Development Agency",
+      active: Math.max(1, Math.round(totalWorksCount * 0.15)),
+      completed: Math.max(1, Math.round(completedWorksCount * 0.15)),
+      delayed: Math.max(0, Math.round(delayedWorksCount * 0.15)),
+      score: "86%",
+    },
+  ];
 
   // Show toast helper
   const triggerToast = (msg: string) => {
@@ -515,12 +531,7 @@ export function DistrictView() {
           </div>
 
           <div className="mt-3 space-y-3">
-            {[
-              { agency: "Rural Engineering Dept (RED)", active: Math.round(totalWorksCount * 0.28), completed: Math.round(completedWorksCount * 0.35), delayed: 4, score: "92%" },
-              { agency: "Public Works Dept (PWD - Provincial)", active: Math.round(totalWorksCount * 0.32), completed: Math.round(completedWorksCount * 0.3), delayed: 6, score: "84%" },
-              { agency: "UP Jal Nigam (Rural Water)", active: Math.round(totalWorksCount * 0.22), completed: Math.round(completedWorksCount * 0.2), delayed: 3, score: "78%" },
-              { agency: "District Urban Development Agency", active: Math.round(totalWorksCount * 0.18), completed: Math.round(completedWorksCount * 0.15), delayed: 1, score: "88%" },
-            ].map((a, i) => (
+            {dynamicAgencies.map((a, i) => (
               <div key={i} className="rounded-lg border border-slate-100 bg-slate-50/60 p-2.5">
                 <div className="flex items-center justify-between text-xs font-bold text-slate-800">
                   <span>{a.agency}</span>

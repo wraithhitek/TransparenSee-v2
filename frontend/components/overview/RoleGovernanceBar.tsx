@@ -31,6 +31,7 @@ export function RoleGovernanceBar() {
     selectedMp,
     setSelectedMp,
     roleMeta,
+    availableStates,
     availableDistricts,
     availableMps,
   } = useRole();
@@ -198,7 +199,7 @@ export function RoleGovernanceBar() {
                     <div className="px-2 py-1 text-[10px] font-bold uppercase text-slate-400">
                       Select State Jurisdiction
                     </div>
-                    {DEFAULT_STATES.map((st) => (
+                    {(availableStates && availableStates.length > 0 ? availableStates : DEFAULT_STATES).map((st) => (
                       <button
                         key={st}
                         type="button"
@@ -235,7 +236,7 @@ export function RoleGovernanceBar() {
                 onChange={(e) => setSelectedState(e.target.value)}
                 className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500"
               >
-                {DEFAULT_STATES.map((st) => (
+                {(availableStates && availableStates.length > 0 ? availableStates : DEFAULT_STATES).map((st) => (
                   <option key={st} value={st}>
                     {st}
                   </option>
@@ -298,7 +299,7 @@ export function RoleGovernanceBar() {
                 }}
                 className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-semibold text-amber-900 shadow-2xs hover:bg-amber-50/50 focus:outline-none cursor-pointer"
               >
-                {DEFAULT_STATES.map((st) => (
+                {(availableStates && availableStates.length > 0 ? availableStates : DEFAULT_STATES).map((st) => (
                   <option key={st} value={st}>
                     State: {st}
                   </option>

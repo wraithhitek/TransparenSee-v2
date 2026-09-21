@@ -28,7 +28,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRole } from "@/context/RoleContext";
-import { fetchDistricts, fetchStates, type ApiDistrict, type ApiState } from "@/lib/api";
+import {
+  fetchDistricts,
+  fetchStates,
+  fetchWorks,
+  fetchAlerts,
+  toWorkShape,
+  type ApiDistrict,
+  type ApiState,
+  type ApiAlert,
+  type WorkShape,
+} from "@/lib/api";
 
 interface DistrictRow {
   name: string;
@@ -42,6 +52,13 @@ interface DistrictRow {
   sanctionedStatus?: boolean;
 }
 
+interface SectorStat {
+  name: string;
+  amountCr: number;
+  pct: number;
+  count: number;
+}
+
 export function StateView() {
   const { selectedState, availableDistricts } = useRole();
   const [selectedSort, setSelectedSort] = useState<"rank" | "absorption" | "delay">("rank");
@@ -49,6 +66,10 @@ export function StateView() {
   // Real data state
   const [districts, setDistricts] = useState<DistrictRow[]>([]);
   const [stateSummary, setStateSummary] = useState<ApiState | null>(null);
+  const [stateAlerts, setStateAlerts] = useState<ApiAlert[]>([]);
+  const [sectorStats, setSectorStats] = useState<SectorStat[]>([]);
+  const [stateRank, setStateRank] = useState<number>(3);
+  const [totalStatesCount, setTotalStatesCount] = useState<number>(28);
   const [loading, setLoading] = useState(true);
 
   // Modals & toast state
@@ -66,44 +87,110 @@ export function StateView() {
     }, 4500);
   };
 
-  // Fetch real districts for this state
+  // Fetch real data for this state
   useEffect(() => {
     let isMounted = true;
     setLoading(true);
 
     Promise.all([
-      fetchDistricts(selectedState, 50).catch(() => [] as ApiDistrict[]),
+      fetchDistricts(selectedState, 100).catch(() => [] as ApiDistrict[]),
       fetchStates().catch(() => [] as ApiState[]),
-    ]).then(([apiDistricts, apiStates]) => {
+      fetchWorks({ state: selectedState, limit: 300 }).catch(() => []),
+      fetchAlerts({ limit: 200 }).catch(() => [] as ApiAlert[]),
+    ]).then(([apiDistricts, apiStates, apiWorks, apiAlerts]) => {
       if (!isMounted) return;
 
-      const currState = apiStates.find(
-        (s) => s.state.toLowerCase() === selectedState.toLowerCase()
-      );
-      if (currState) setStateSummary(currState);
+      if (apiStates && apiStates.length > 0) {
+        setTotalStatesCount(apiStates.length);
+        const sortedStates = [...apiStates].sort((a, b) => a.mean_risk - b.mean_risk);
+        const idx = sortedStates.findIndex(
+          (s) => s.state.toLowerCase() === selectedState.toLowerCase()
+        );
+        if (idx !== -1) setStateRank(idx + 1);
+
+        const currState = apiStates.find(
+          (s) => s.state.toLowerCase() === selectedState.toLowerCase()
+        );
+        if (currState) setStateSummary(currState);
+      }
+
+      // Filter alerts for current state
+      if (apiAlerts && apiAlerts.length > 0) {
+        const filtered = apiAlerts.filter(
+          (a) => a.state && a.state.toLowerCase() === selectedState.toLowerCase()
+        );
+        setStateAlerts(filtered);
+      }
+
+      // Compute dynamic sectoral breakdown from real works
+      if (apiWorks && apiWorks.length > 0) {
+        const catMap = new Map<string, { amount: number; count: number }>();
+        let totalAmt = 0;
+        apiWorks.forEach((w) => {
+          const rawCat = (w.category && w.category.trim()) || "Community Infrastructure";
+          const cat =
+            rawCat.toLowerCase().includes("road") || rawCat.toLowerCase().includes("bridge")
+              ? "Rural Roads & Bridges"
+              : rawCat.toLowerCase().includes("water") || rawCat.toLowerCase().includes("drinking")
+              ? "Drinking Water & Sanitation"
+              : rawCat.toLowerCase().includes("health") || rawCat.toLowerCase().includes("hospital")
+              ? "Healthcare Facilities"
+              : rawCat.toLowerCase().includes("education") || rawCat.toLowerCase().includes("school")
+              ? "Education & Smart Classrooms"
+              : rawCat.toLowerCase().includes("light") || rawCat.toLowerCase().includes("solar")
+              ? "Renewable Energy & Solar"
+              : "Community Infrastructure & Others";
+
+          const existing = catMap.get(cat) || { amount: 0, count: 0 };
+          const amt = w.amount || 1500000;
+          catMap.set(cat, {
+            amount: existing.amount + amt,
+            count: existing.count + 1,
+          });
+          totalAmt += amt;
+        });
+
+        const computedSectors: SectorStat[] = Array.from(catMap.entries())
+          .map(([name, val]) => ({
+            name,
+            amountCr: Number((val.amount / 10000000).toFixed(1)),
+            pct: totalAmt > 0 ? Math.round((val.amount / totalAmt) * 100) : 0,
+            count: val.count,
+          }))
+          .sort((a, b) => b.amountCr - a.amountCr)
+          .slice(0, 5);
+
+        if (computedSectors.length > 0) {
+          setSectorStats(computedSectors);
+        }
+      }
 
       if (apiDistricts && apiDistricts.length > 0) {
-        const rows: DistrictRow[] = apiDistricts.slice(0, 10).map((d, i) => {
-          const sanctioned = d.expenditure > 0 ? (d.expenditure * 1.25) / 10000000 : 35 + i * 5;
-          const utilised = d.expenditure > 0 ? d.expenditure / 10000000 : 28 + i * 4;
-          const abs = d.completion_rate_pct > 0 ? d.completion_rate_pct : Math.round((utilised / sanctioned) * 100);
+        const rows: DistrictRow[] = apiDistricts.slice(0, 15).map((d, i) => {
+          const utilised = d.expenditure > 0 ? d.expenditure / 10000000 : 25 + (i % 5) * 4;
+          const sanctioned = d.expenditure > 0 ? (d.expenditure * 1.28) / 10000000 : utilised * 1.25;
+          const abs =
+            d.completion_rate_pct > 0
+              ? d.completion_rate_pct
+              : Math.min(100, Math.round((utilised / Math.max(sanctioned, 1)) * 100));
+
           return {
             name: d.ida_district,
             rank: i + 1,
-            works: d.works_recommended || 150 + i * 20,
+            works: Math.round(d.works_recommended) || 120 + i * 15,
             sanctionedCr: Number(sanctioned.toFixed(1)),
             utilisedCr: Number(utilised.toFixed(1)),
             absorptionPct: Number(abs.toFixed(1)),
-            pendingApprovals: Math.max(1, Math.round(d.high_risk_works || 4)),
-            riskTier: d.risk_score > 60 ? "High" : d.risk_score > 40 ? "Medium" : "Low",
+            pendingApprovals: Math.max(1, Math.round(d.high_risk_works || 3)),
+            riskTier: d.risk_score > 55 ? "High" : d.risk_score > 38 ? "Medium" : "Low",
           };
         });
         setDistricts(rows);
       } else {
         // Fallback using availableDistricts
         const defaultRows: DistrictRow[] = (availableDistricts.length > 0 ? availableDistricts : [
-          "District A", "District B", "District C", "District D", "District E", "District F", "District G"
-        ]).slice(0, 7).map((dName, i) => ({
+          "District A", "District B", "District C", "District D", "District E"
+        ]).slice(0, 8).map((dName, i) => ({
           name: dName,
           rank: i + 1,
           works: 242 - i * 20,
@@ -123,11 +210,21 @@ export function StateView() {
     };
   }, [selectedState, availableDistricts]);
 
-  // Derived metrics
-  const totalOutlayCr = districts.reduce((acc, d) => acc + d.sanctionedCr, 0) || 485.0;
-  const totalUtilisedCr = districts.reduce((acc, d) => acc + d.utilisedCr, 0) || 380.2;
+  // Derived metrics from real data
+  const totalOutlayCr = stateSummary?.work_value
+    ? Number(((stateSummary.work_value * 1.25) / 10000000).toFixed(1))
+    : districts.reduce((acc, d) => acc + d.sanctionedCr, 0) || 485.0;
+
+  const totalUtilisedCr = stateSummary?.work_value
+    ? Number((stateSummary.work_value / 10000000).toFixed(1))
+    : districts.reduce((acc, d) => acc + d.utilisedCr, 0) || 380.2;
+
   const avgAbsorption = totalOutlayCr > 0 ? ((totalUtilisedCr / totalOutlayCr) * 100).toFixed(1) : "78.4";
-  const pendingSanctionsTotal = districts.reduce((acc, d) => acc + d.pendingApprovals, 0) || 34;
+  const pendingSanctionsTotal = stateSummary?.high_risk
+    ? stateSummary.high_risk
+    : districts.reduce((acc, d) => acc + d.pendingApprovals, 0) || 34;
+
+  const topAlert = stateAlerts[0] || null;
 
   const sortedDistricts = [...districts].sort((a, b) => {
     if (selectedSort === "absorption") return b.absorptionPct - a.absorptionPct;
@@ -224,7 +321,7 @@ export function StateView() {
 
         <div className="flex shrink-0 items-center gap-2.5">
           <span className="inline-flex h-[36px] items-center rounded-lg border border-purple-200 bg-purple-50 px-3 text-xs font-bold text-purple-700 whitespace-nowrap shadow-2xs">
-            Ranked 3rd of 28 States
+            Ranked #{stateRank} of {totalStatesCount} States
           </span>
           <button
             onClick={handleExportDossier}
@@ -249,9 +346,9 @@ export function StateView() {
 
         <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs">
           <div className="text-[11px] font-medium text-slate-500">Comparative Ranking</div>
-          <div className="mt-1 text-lg font-bold text-purple-700">Rank #3 / 28</div>
+          <div className="mt-1 text-lg font-bold text-purple-700">Rank #{stateRank} / {totalStatesCount}</div>
           <div className="mt-0.5 text-[10px] text-purple-600 font-semibold">
-            Top 10% absorption index
+            {stateSummary ? `Mean Risk: ${stateSummary.mean_risk.toFixed(1)}%` : "Top absorption index"}
           </div>
         </div>
 
@@ -259,23 +356,27 @@ export function StateView() {
           <div className="text-[11px] font-medium text-slate-500">Pending State Sanctions</div>
           <div className="mt-1 text-lg font-bold text-amber-600">{pendingSanctionsTotal} Works</div>
           <div className="mt-0.5 text-[10px] text-amber-700 font-medium">
-            ₹ {(pendingSanctionsTotal * 0.8).toFixed(1)} Cr awaiting State Nodal sign-off
+            ₹ {(pendingSanctionsTotal * 0.45).toFixed(1)} Cr awaiting State Nodal sign-off
           </div>
         </div>
 
         <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs">
           <div className="text-[11px] font-medium text-slate-500">Inter-District Variance</div>
-          <div className="mt-1 text-lg font-bold text-slate-900">12.4% Spread</div>
-          <div className="mt-0.5 text-[10px] text-slate-500">
+          <div className="mt-1 text-lg font-bold text-slate-900">
+            {districts.length > 1
+              ? `${Math.abs(districts[0]?.absorptionPct - districts[districts.length - 1]?.absorptionPct).toFixed(1)}% Spread`
+              : "12.4% Spread"}
+          </div>
+          <div className="mt-0.5 text-[10px] text-slate-500 truncate">
             Top: {districts[0]?.absorptionPct ?? 86.8}% · Bottom: {districts[districts.length - 1]?.absorptionPct ?? 57.9}%
           </div>
         </div>
 
         <div className="rounded-lg border border-slate-200/80 bg-white p-3 shadow-2xs">
-          <div className="text-[11px] font-medium text-slate-500">Grievance Redressal</div>
-          <div className="mt-1 text-lg font-bold text-emerald-700">91.2%</div>
-          <div className="mt-0.5 text-[10px] text-emerald-600 font-medium">
-            Avg 11.4 days resolution time
+          <div className="text-[11px] font-medium text-slate-500">AI Flagged Works</div>
+          <div className="mt-1 text-lg font-bold text-red-600">{stateSummary?.high_risk ?? 18} Flagged</div>
+          <div className="mt-0.5 text-[10px] text-red-700 font-medium">
+            {stateAlerts.length} Open Anomaly Alerts
           </div>
         </div>
       </section>
@@ -290,11 +391,15 @@ export function StateView() {
             <p className="text-xs sm:text-sm font-semibold text-amber-900">
               {reviewNoticeIssued
                 ? "✓ State Arbitration Review Order Dispatched · Special Task Force Assigned"
+                : topAlert
+                ? `State AI Advisory: ${topAlert.title}`
                 : `State Trend Advisory: Fund Lapse Trajectory in 2 Lagging Districts of ${selectedState}`}
             </p>
-            <p className="mt-0.5 text-[11px] sm:text-xs text-amber-800">
+            <p className="mt-0.5 text-[11px] sm:text-xs text-amber-800 line-clamp-1">
               {reviewNoticeIssued
                 ? "Collectorates have been directed to rebalance uncommitted funds before Q3 close."
+                : topAlert
+                ? `${topAlert.detected.replace(/\n/g, " · ")} — ${topAlert.recommended_action}`
                 : `${districts[districts.length - 1]?.name || "Bottom District"} shows absorption below 65%. Funds risk lapse if physical work-orders are not expedited.`}
             </p>
           </div>
@@ -433,45 +538,35 @@ export function StateView() {
             </div>
 
             <div className="mt-3 space-y-3">
-              <div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Rural Roads & Bridges</span>
-                  <span className="font-bold text-slate-900">₹ 142.5 Cr (32%)</span>
+              {(sectorStats.length > 0 ? sectorStats : [
+                { name: "Rural Roads & Bridges", amountCr: 142.5, pct: 32 },
+                { name: "Drinking Water & Sanitation", amountCr: 121.0, pct: 27 },
+                { name: "Education & Smart Classrooms", amountCr: 98.4, pct: 22 },
+                { name: "Healthcare Facilities", amountCr: 83.1, pct: 19 },
+              ]).map((sec, idx) => (
+                <div key={sec.name}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-semibold text-slate-700">{sec.name}</span>
+                    <span className="font-bold text-slate-900">₹ {sec.amountCr} Cr ({sec.pct}%)</span>
+                  </div>
+                  <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        idx === 0
+                          ? "bg-purple-600"
+                          : idx === 1
+                          ? "bg-blue-600"
+                          : idx === 2
+                          ? "bg-emerald-600"
+                          : idx === 3
+                          ? "bg-amber-500"
+                          : "bg-indigo-500"
+                      }`}
+                      style={{ width: `${Math.min(sec.pct, 100)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-purple-600 rounded-full" style={{ width: "32%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Drinking Water & Sanitation</span>
-                  <span className="font-bold text-slate-900">₹ 121.0 Cr (27%)</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-600 rounded-full" style={{ width: "27%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Education & Smart Classrooms</span>
-                  <span className="font-bold text-slate-900">₹ 98.4 Cr (22%)</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-emerald-600 rounded-full" style={{ width: "22%" }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-700">Healthcare Facilities</span>
-                  <span className="font-bold text-slate-900">₹ 83.1 Cr (19%)</span>
-                </div>
-                <div className="mt-1 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-amber-500 rounded-full" style={{ width: "19%" }} />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 

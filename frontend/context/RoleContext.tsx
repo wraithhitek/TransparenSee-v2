@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { fetchStates, fetchDistricts, fetchMps, type ApiMp, type ApiState, type ApiDistrict } from "@/lib/api";
 
 export type RoleType = "ministry" | "state" | "district" | "mp";
 
@@ -104,10 +105,15 @@ export const STATE_DISTRICTS: Record<string, string[]> = {
 };
 
 export interface MpRecord {
+  key?: string;
   name: string;
   constituency: string;
   state: string;
   house: "Lok Sabha" | "Rajya Sabha";
+  allocated_amount?: number;
+  derived_expenditure?: number;
+  composite_risk?: number;
+  risk_band?: string;
 }
 
 export const POPULAR_MPS: MpRecord[] = [
@@ -213,7 +219,10 @@ interface RoleContextValue {
   setSelectedDistrict: (district: string) => void;
   selectedMp: string;
   setSelectedMp: (mp: string) => void;
+  selectedMpKey: string;
+  setSelectedMpKey: (key: string) => void;
   roleMeta: RoleMeta;
+  availableStates: string[];
   availableDistricts: string[];
   availableMps: MpRecord[];
 }
@@ -224,12 +233,18 @@ const ROLE_STORAGE_KEY = "transparensee-governance-role-v1";
 const STATE_STORAGE_KEY = "transparensee-state-scope-v1";
 const DISTRICT_STORAGE_KEY = "transparensee-district-scope-v1";
 const MP_STORAGE_KEY = "transparensee-mp-scope-v1";
+const MP_KEY_STORAGE = "transparensee-mp-key-scope-v1";
 
 export function RoleProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<RoleType>("ministry");
   const [selectedState, setSelectedStateState] = useState<string>("Uttar Pradesh");
   const [selectedDistrict, setSelectedDistrictState] = useState<string>("Varanasi");
   const [selectedMp, setSelectedMpState] = useState<string>("Narendra Modi");
+  const [selectedMpKey, setSelectedMpKeyState] = useState<string>("");
+
+  const [availableStates, setAvailableStates] = useState<string[]>(DEFAULT_STATES);
+  const [liveDistricts, setLiveDistricts] = useState<string[]>([]);
+  const [liveMps, setLiveMps] = useState<MpRecord[]>([]);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -244,28 +259,100 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       if (savedDistrict) setSelectedDistrictState(savedDistrict);
       const savedMp = localStorage.getItem(MP_STORAGE_KEY);
       if (savedMp) setSelectedMpState(savedMp.split(" (")[0]);
+      const savedKey = localStorage.getItem(MP_KEY_STORAGE);
+      if (savedKey) setSelectedMpKeyState(savedKey);
     } catch {
       // Ignore storage errors in restricted contexts
     }
   }, []);
 
+  // Fetch real states on mount
+  useEffect(() => {
+    fetchStates()
+      .then((res) => {
+        if (res && res.length > 0) {
+          const names = res.map((s) => s.state).filter(Boolean);
+          if (names.length > 0) {
+            // Keep unique
+            setAvailableStates(Array.from(new Set(names)));
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Fetch real districts and MPs when selectedState changes
+  useEffect(() => {
+    let isMounted = true;
+    Promise.all([
+      fetchDistricts(selectedState, 200).catch(() => [] as ApiDistrict[]),
+      fetchMps({ state: selectedState, limit: 200 }).catch(() => [] as ApiMp[]),
+    ]).then(([distList, mpList]) => {
+      if (!isMounted) return;
+
+      if (distList && distList.length > 0) {
+        const unique = Array.from(new Set(distList.map((d) => d.ida_district).filter(Boolean)));
+        if (unique.length > 0) setLiveDistricts(unique);
+      } else {
+        setLiveDistricts([]);
+      }
+
+      if (mpList && mpList.length > 0) {
+        const mapped: MpRecord[] = mpList.map((m) => ({
+          key: m.mp_key,
+          name: m.mp_name,
+          constituency: m.constituency,
+          state: m.state,
+          house: (m.house === "Rajya Sabha" ? "Rajya Sabha" : "Lok Sabha") as "Lok Sabha" | "Rajya Sabha",
+          allocated_amount: m.allocated_amount,
+          derived_expenditure: m.derived_expenditure,
+          composite_risk: m.composite_risk,
+          risk_band: m.risk_band,
+        }));
+        setLiveMps(mapped);
+
+        // Sync selectedMpKey
+        const match = mapped.find(
+          (m) =>
+            m.name.toLowerCase() === selectedMp.toLowerCase() ||
+            m.constituency.toLowerCase() === selectedDistrict.toLowerCase()
+        );
+        if (match && match.key) {
+          setSelectedMpKeyState(match.key);
+        } else if (mapped[0] && mapped[0].key) {
+          setSelectedMpKeyState(mapped[0].key);
+        }
+      } else {
+        setLiveMps([]);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedState, selectedMp, selectedDistrict]);
+
   const setRole = (newRole: RoleType) => {
     setRoleState(newRole);
     try {
       localStorage.setItem(ROLE_STORAGE_KEY, newRole);
-    } catch {
-      // Ignore
-    }
+    } catch {}
+  };
+
+  const setSelectedMpKey = (key: string) => {
+    setSelectedMpKeyState(key);
+    try {
+      localStorage.setItem(MP_KEY_STORAGE, key);
+    } catch {}
   };
 
   const setSelectedState = (state: string) => {
     setSelectedStateState(state);
     // Update default district for this state
-    const districts = STATE_DISTRICTS[state] || ["District Headquarters"];
-    const firstDistrict = districts[0] || "District Headquarters";
+    const fallbackDistricts = STATE_DISTRICTS[state] || ["District Headquarters"];
+    const firstDistrict = fallbackDistricts[0] || "District Headquarters";
     setSelectedDistrictState(firstDistrict);
 
-    // DYNAMICALLY update MP for this state & district!
     const matchedMp = getMpForStateAndConstituency(state, firstDistrict);
     setSelectedMpState(matchedMp);
 
@@ -273,28 +360,54 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(STATE_STORAGE_KEY, state);
       localStorage.setItem(DISTRICT_STORAGE_KEY, firstDistrict);
       localStorage.setItem(MP_STORAGE_KEY, matchedMp);
-    } catch {
-      // Ignore
-    }
+    } catch {}
   };
 
   const setSelectedDistrict = (district: string) => {
     setSelectedDistrictState(district);
 
-    // DYNAMICALLY update MP for this constituency in current state!
-    const matchedMp = getMpForStateAndConstituency(selectedState, district);
-    setSelectedMpState(matchedMp);
+    // Update MP matching this district/constituency if available
+    const liveMatch = liveMps.find(
+      (m) => m.constituency.toLowerCase() === district.toLowerCase()
+    );
+    if (liveMatch) {
+      setSelectedMpState(liveMatch.name);
+      if (liveMatch.key) setSelectedMpKey(liveMatch.key);
+    } else {
+      const matchedMp = getMpForStateAndConstituency(selectedState, district);
+      setSelectedMpState(matchedMp);
+    }
 
     try {
       localStorage.setItem(DISTRICT_STORAGE_KEY, district);
-      localStorage.setItem(MP_STORAGE_KEY, matchedMp);
-    } catch {
-      // Ignore
-    }
+    } catch {}
   };
 
   const setSelectedMp = (mpInput: string) => {
     const cleanedName = mpInput.includes(" (") ? mpInput.split(" (")[0].trim() : mpInput.trim();
+
+    // Check live MPs first
+    const liveFound = liveMps.find(
+      (m) =>
+        m.name.toLowerCase() === cleanedName.toLowerCase() ||
+        `${m.name} (${m.constituency})`.toLowerCase() === mpInput.toLowerCase()
+    );
+
+    if (liveFound) {
+      setSelectedMpState(liveFound.name);
+      if (liveFound.key) setSelectedMpKey(liveFound.key);
+      if (liveFound.state) setSelectedStateState(liveFound.state);
+      if (liveFound.constituency) setSelectedDistrictState(liveFound.constituency);
+      try {
+        localStorage.setItem(MP_STORAGE_KEY, liveFound.name);
+        if (liveFound.key) localStorage.setItem(MP_KEY_STORAGE, liveFound.key);
+        localStorage.setItem(STATE_STORAGE_KEY, liveFound.state);
+        localStorage.setItem(DISTRICT_STORAGE_KEY, liveFound.constituency);
+      } catch {}
+      return;
+    }
+
+    // Fallback to POPULAR_MPS
     const found = POPULAR_MPS.find(
       (m) =>
         m.name.toLowerCase() === cleanedName.toLowerCase() ||
@@ -318,8 +431,11 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const availableDistricts = STATE_DISTRICTS[selectedState] || ["District Headquarters", "Central Block", "North Division", "South Division"];
-  const availableMps = getMpsForState(selectedState);
+  const availableDistricts = liveDistricts.length > 0
+    ? liveDistricts
+    : (STATE_DISTRICTS[selectedState] || ["District Headquarters", "Central Block", "North Division", "South Division"]);
+
+  const availableMps = liveMps.length > 0 ? liveMps : getMpsForState(selectedState);
 
   return (
     <RoleContext.Provider
@@ -332,7 +448,10 @@ export function RoleProvider({ children }: { children: ReactNode }) {
         setSelectedDistrict,
         selectedMp,
         setSelectedMp,
+        selectedMpKey,
+        setSelectedMpKey,
         roleMeta: ROLE_DEFINITIONS[role],
+        availableStates,
         availableDistricts,
         availableMps,
       }}
